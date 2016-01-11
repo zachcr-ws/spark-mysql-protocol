@@ -22,6 +22,7 @@
         "ursa": "*",
         "when": "*",
         "moment": "*",
-        "xtend": "*"
+        "xtend": "*",
+        "mysql": "*"
     }
 }
