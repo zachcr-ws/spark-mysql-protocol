@@ -1,17 +1,16 @@
 {
-    "name": "spark-protocol",
-    "version": "0.1.6",
+    "name": "spark-mysql-protocol",
+    "version": "0.0.0",
     "main": "./index.js",
     "repository": {
         "type": "git",
-        "url": "https://github.com/spark/spark-protocol"
+        "url": "https://github.com/ZachBergh/spark-mysql-protocol"
     },
-    "homepage": "https://github.com/spark/spark-protocol",
-    "bugs": "https://github.com/spark/spark-protocol/issues",
+    "bugs": "https://github.com/ZachBergh/spark-mysql-protocol/issues",
     "author": {
-        "name": "David Middlecamp",
-        "email": "david@spark.io",
-        "url": "https://www.spark.io/"
+        "name": "ZachBergh",
+        "email": "zach@aeris.io",
+        "url": "https://www.aeris.cn/"
     },
     "license": "LGPL-3.0",
     "dependencies": {
