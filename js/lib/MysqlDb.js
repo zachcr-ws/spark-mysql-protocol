@@ -64,9 +64,9 @@ MysqlDriver.prototype = {
 
 	save: function(table, values){
 		var query_string = "INSERT INTO " + table;
-		if(keys && values){
+		if(values){
 			var val = [];
-			for (var i = 0; i < keys.values; i++){
+			for (var i = 0; i < values.length; i++){
 				val.push("?");
 			}
 			query_string += " VALUES (" + val.join(",") + ")";
