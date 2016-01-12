@@ -74,6 +74,22 @@ MysqlDriver.prototype = {
 		}
 	},
 
+	update: function(table, sets, where, values){
+		var query_string = "UPDATE " + table + " SET ",
+			updatesKey = [],
+			updatesVal = [];
+		if ( sets ){
+			for(var k in sets){
+				updatesKey.push(k + "=?");
+				updatesVal.push(sets[k]);
+			}
+			updatesKey.join(", ");
+			query_string += updatesKey;
+		}
+		if(where && typeof where == 'object') query_string += " WHERE " + where.join(" AND ");
+		return this.query(query_string, updatesVal.concat(values));
+	},
+
 	delete: function(table, where, values){
 		var query_string = "DELETE FROM " + table;
 		if(where && typeof where == 'object') {
