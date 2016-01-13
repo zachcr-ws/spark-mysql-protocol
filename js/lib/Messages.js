@@ -159,8 +159,6 @@ module.exports = {
             return;
         }
 
-        logger.log("static class init!");
-
         for (var p in StaticClass.Spec) {
             var obj = StaticClass.Spec[p];
 

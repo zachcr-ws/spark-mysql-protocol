@@ -21,6 +21,7 @@ var SparkCore = require('../clients/SparkCore.js');
 var EventPublisher = require('../lib/EventPublisher.js');
 var utilities = require('../lib/utilities.js');
 var logger = require('../lib/logger.js');
+var model = require("../lib/Model.js");
 var crypto = require('crypto');
 var ursa = require('ursa');
 var when = require('when');
@@ -53,9 +54,21 @@ DeviceServer.prototype = {
 
     addCoreKey: function(coreid, public_key) {
         try{
-            var fullPath = path.join(this.options.coreKeysDir, coreid + ".pub.pem");
-            fs.writeFileSync(fullPath, public_key);
-            return true;
+            model.findCore(coreid).then(function (result){
+                if ( result[0].id ){
+                    var coreKey = {
+                        core_id: result[0].id,
+                        public_key: public_key
+                    };
+                    model.saveCoreKey(coreKey).then(function(result){
+                        return true
+                    }, function ( err ){
+                        return false;
+                    });
+                }
+            }, function (err){
+                return false;
+            });
         }
         catch (ex) {
             logger.error("Error saving new core key ", ex);
@@ -63,70 +76,46 @@ DeviceServer.prototype = {
         return false;
     },
 
-
-    loadCoreData: function () {
-        var attribsByID = {};
-
-        if (!fs.existsSync(this.options.coreKeysDir)) {
-            console.log("core keys directory didn't exist, creating... " + this.options.coreKeysDir);
-            fs.mkdirSync(this.options.coreKeysDir);
-        }
-
-        var files = fs.readdirSync(this.options.coreKeysDir);
-        for (var i = 0; i < files.length; i++) {
-            var filename = files[i],
-                fullPath = path.join(this.options.coreKeysDir, filename),
-                ext = utilities.getFilenameExt(filename),
-                id = utilities.filenameNoExt(utilities.filenameNoExt(filename));
-
-            if (ext == ".pem") {
-                console.log("found " + id);
-                this._allIDs[id] = true;
-
-                if (!attribsByID[id]) {
-                    var core = {}
-                    core.coreID = id;
-                    attribsByID[id] = core;
-                }
-            }
-            else if (ext == ".json") {
-                try {
-                    var contents = fs.readFileSync(fullPath);
-                    var core = JSON.parse(contents);
-                    core.coreID = core.coreID || id;
-                    attribsByID[core.coreID ] = core;
-
-                    console.log("found " + core.coreID);
-                    this._allIDs[core.coreID ] = true;
-                }
-                catch (ex) {
-                    logger.error("Error loading core file " + filename);
-                }
-            }
-        }
-
-        this._attribsByID = attribsByID;
-    },
-
-    saveCoreData: function (coreid, attribs) {
+    saveCoreData: function (coreid) {
         try {
-            //assert basics
-            attribs = attribs || {};
-//            attribs["coreID"] = coreid;
+            var attribs = this._attribsByID[coreid];
+            var that = this;
 
-            var jsonStr = JSON.stringify(attribs, null, 2);
-            if (!jsonStr) {
+            model.saveCore(attribs).then(function(result){
+                if ( result.insertId ) {
+                    that._attribsByID[coreid]["id"] = result["insertId"];
+                }
+                return true;
+            }, function (err) {
+                if( err.code && err.code == "ER_DUP_ENTRY" ) {
+                    logger.log("coreid already exist.");
+                } else {
+                    logger.error("Save core error: ", err);
+                }
                 return false;
-            }
-
-            var fullPath = path.join(this.options.coreKeysDir, coreid + ".json");
-            fs.writeFileSync(fullPath, jsonStr);
-            return true;
+            });
         }
         catch (ex) {
             logger.error("Error saving core data ", ex);
         }
         return false;
+    },
+
+    loadCoreData: function () {
+        var attribsByID = {};
+        var that = this;
+
+        model.allCore().then(function(result){
+            for (var i in result) {
+                var core = result[0];
+                attribsByID[core.core_id] = core;
+                that._allIDs[core.core_id ] = true;
+            }
+        }, function(err){
+            logger.error("Get AllCore Error: ", err);
+        });
+
+        this._attribsByID = attribsByID;
     },
 
     getCore: function (coreid) {
@@ -136,7 +125,7 @@ DeviceServer.prototype = {
     getCoreAttributes: function (coreid) {
         //assert this exists and is set properly when asked.
         this._attribsByID[coreid] = this._attribsByID[coreid] || {};
-        //this._attribsByID[coreid]["coreID"] = coreid;
+        //this._attribsByID[coreid]["core_id"] = coreid;
 
         return this._attribsByID[coreid];
     },
@@ -144,10 +133,19 @@ DeviceServer.prototype = {
     setCoreAttribute: function (coreid, name, value) {
         this._attribsByID[coreid] = this._attribsByID[coreid] || {};
         this._attribsByID[coreid][name] = value;
-        this.saveCoreData(coreid, this._attribsByID[coreid]);
+        this.saveCoreData(coreid);
         return true;
     },
-    
+
+    setCoreAttributes: function(coreid, objects) {
+        this._attribsByID[coreid] = this._attribsByID[coreid] || {};
+        for(var key in objects) {
+            this._attribsByID[coreid][key] = objects[key];
+        }
+        this.saveCoreData(coreid);
+        return
+    },
+
     getCoreByName: function (name) {
         //var cores = this._allCoresByID;
         var cores = this._attribsByID;
@@ -177,7 +175,7 @@ DeviceServer.prototype = {
     },
 
 
-//id: core.coreID,
+//id: core.core_id,
 //name: core.name || null,
 //last_app: core.last_flashed_app_name || null,
 //last_heard: null
@@ -213,7 +211,7 @@ DeviceServer.prototype = {
                             var coreid = this.getHexCoreID();
                             that._allCoresByID[coreid] = core;
                             that._attribsByID[coreid] = that._attribsByID[coreid] || {
-                                coreID: coreid,
+                                core_id: coreid,
                                 name: null,
                                 ip: this.getRemoteIPAddress(),
                                 product_id: this.spark_product_id,
@@ -262,7 +260,6 @@ DeviceServer.prototype = {
         //
         //  Load our server key
         //
-        console.info("Loading server key from " + settings.serverKeyFile);
         CryptoLib.loadServerKeys(
             settings.serverKeyFile,
             settings.serverKeyPassFile,
@@ -273,7 +270,7 @@ DeviceServer.prototype = {
         //  Wait for the keys to be ready, then start accepting connections
         //
         server.listen(settings.PORT, function () {
-            logger.log("server started", { host: settings.HOST, port: settings.PORT });
+            logger.log("SOAP started", { host: settings.HOST, port: settings.PORT });
         });
 
 

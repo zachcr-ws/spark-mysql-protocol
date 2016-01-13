@@ -90,7 +90,6 @@ module.exports = {
     _serverKeys: null,
     setServerKeys: function (key) {
         if (ursa.isKey(key)) {
-            logger.log("set server key");
             CryptoLib._serverKeys = key;
         }
         else {
