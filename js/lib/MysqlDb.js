@@ -9,6 +9,7 @@ var when = require("when");
 
 var MasterClient = {};
 var SlaveClient = {};
+var Driver = {};
 
 var MysqlDriver = function(host_master, host_slave, user, password, dbname, limit) {
 	MasterClient = mysql.createConnection({
@@ -99,4 +100,19 @@ MysqlDriver.prototype = {
 	}
 };
 
-module.exports = MysqlDriver;
+
+var InitMysqlClient = function(host_master, host_slave, user, password, database, limit){
+	if(Driver.constructor != MysqlDriver) {
+		Driver = new MysqlDriver(
+			host_master,
+			host_slave,
+			user,
+			password,
+			database,
+			limit
+		);
+	}
+	return Driver;
+}
+
+module.exports = InitMysqlClient;

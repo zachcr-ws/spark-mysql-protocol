@@ -132,6 +132,7 @@ DeviceServer.prototype = {
     getCore: function (coreid) {
         return this._allCoresByID[coreid];
     },
+
     getCoreAttributes: function (coreid) {
         //assert this exists and is set properly when asked.
         this._attribsByID[coreid] = this._attribsByID[coreid] || {};
@@ -139,12 +140,14 @@ DeviceServer.prototype = {
 
         return this._attribsByID[coreid];
     },
+
     setCoreAttribute: function (coreid, name, value) {
         this._attribsByID[coreid] = this._attribsByID[coreid] || {};
         this._attribsByID[coreid][name] = value;
         this.saveCoreData(coreid, this._attribsByID[coreid]);
         return true;
     },
+    
     getCoreByName: function (name) {
         //var cores = this._allCoresByID;
         var cores = this._attribsByID;
