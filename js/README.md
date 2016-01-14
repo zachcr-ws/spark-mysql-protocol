@@ -2,6 +2,8 @@
 
 #### Init mysqldb ( Singleton pattern ):
 
+db architecture: db.sql
+
 ```
 var MysqlClient = require("spark-mysql-protocol/lib/MysqlDb.js")
 MysqlClient.InitMysqlClient(
