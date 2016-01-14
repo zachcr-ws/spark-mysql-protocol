@@ -58,6 +58,7 @@ DeviceServer.prototype = {
     },
 
     saveCoreData: function (coreid) {
+        var defer = when.defer();
         try {
             var attribs = this._attribsByID[coreid];
             var that = this;
@@ -66,20 +67,21 @@ DeviceServer.prototype = {
                 if ( result.insertId ) {
                     attribs.id = result.insertId;
                 }
-                return true;
+                defer.resolve()
             }, function (err) {
                 if( err.code && err.code == "ER_DUP_ENTRY" ) {
                     logger.log("coreid already exist.");
                 } else {
                     logger.error("Save core error: ", err);
                 }
-                return false;
+                defer.reject();
             });
         }
         catch (ex) {
             logger.error("Error saving core data ", ex);
         }
-        return false;
+        
+        return defer.promise;
     },
 
     loadCoreData: function () {
@@ -93,11 +95,10 @@ DeviceServer.prototype = {
                 attribsByID[core.coreID] = core;
                 that._allIDs[core.coreID] = true;
             }
+            that._attribsByID = attribsByID;
         }, function(err){
             logger.error("Get AllCore Error: ", err);
         });
-
-        this._attribsByID = attribsByID;
     },
 
     getCore: function (coreid) {
@@ -122,7 +123,8 @@ DeviceServer.prototype = {
         return true;
     },
 
-    setCoreAttributes: function(coreid, objects) {
+    setCoreAttributes: function(coreid, objects, callback) {
+        var that = this;
         this._attribsByID[coreid] = this._attribsByID[coreid] || {};
         for(var key in objects) {
             this._attribsByID[coreid][key] = objects[key];
@@ -130,8 +132,11 @@ DeviceServer.prototype = {
         if ( !this._attribsByID[coreid].coreID ) {
             this._attribsByID[coreid]["coreID"] = coreid;
         }
-        this.saveCoreData(coreid);
-        return
+        this.saveCoreData(coreid).then(function(){
+            that.loadCoreData();
+            if(callback) callback();
+        });
+        return;
     },
 
     getCoreByName: function (name) {
