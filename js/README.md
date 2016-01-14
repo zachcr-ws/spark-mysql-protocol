@@ -27,10 +27,18 @@ all functions return a promise.
 
 ```
 var client = require("spark-mysql-protocol/lib/MysqlDb.js").InitMysqlClient();
-client.find().then(...);
-client.save().then(...);
-client.delete().then(...);
-client.update().then(...);
-client.query().then(...);
-client.slave_query().then(...);    // slave node read action.
+client.find(table, where, values, orderby, limit).then(...);
+client.save(table, values).then(...);
+client.delete(table, where, values).then(...);
+client.update(table, sets, where, values).then(...);
+client.query(query_string, values).then(...);
+client.slave_query(query_string, values).then(...);    // slave node read action.
 ```
+
+* table: String --- table's name
+* where: [] --- where's array --- exp: ["id=?", "username=?"]
+* values: [] --- for find function: where's values, for save function: insert values
+* orderby: [] --- orderby array
+* limit: String --- limit
+* sets: object --- exp: {"username" : "ZachBergh"}
+* query_string --- original query_string, params use '?': "select * from user where id=?"
