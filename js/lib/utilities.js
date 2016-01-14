@@ -25,6 +25,7 @@ var extend = require('xtend');
 var fs = require('fs');
 var path = require('path');
 var settings = require('../settings.js');
+var model = require('./Model.js');
 var ursa = require('ursa');
 
 var utilities;
@@ -333,16 +334,13 @@ module.exports = {
     },
 
     get_core_key: function(coreid, callback) {
-        var keyFile = path.join(global.settings.coreKeysDir || settings.coreKeysDir, coreid + ".pub.pem");
-        if (!fs.existsSync(keyFile)) {
-            logger.log("Expected to find public key for core " + coreid + " at " + keyFile);
-			callback(null);
-        }
-        else {
-            var keyStr = fs.readFileSync(keyFile).toString();
+        model.findCoreKey(coreid).then(function( result ){
+            var keyStr = result[0].public_key;
             var public_key = ursa.createPublicKey(keyStr, 'binary');
             callback(public_key);
-        }
+        }, function( err ){
+            logger.log("Get Core Key Error: ", Error);
+        });
     },
 
 	save_handshake_key: function(coreid, pem) {

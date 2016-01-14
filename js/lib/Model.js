@@ -44,6 +44,10 @@ var Model = {
 
 	allCore: function () {
 		return client.find("core");
+	},
+
+	findCoreKey: function(coreid) {
+		return client.find("core_key", ["core_id=?"], [coreid]);
 	}
 }
 
