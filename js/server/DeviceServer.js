@@ -53,22 +53,7 @@ DeviceServer.prototype = {
     },
 
     addCoreKey: function(coreid, public_key) {
-        try{
-            model.findCore(coreid).then(function (result){
-                if ( result.length >= 1 && result[0].id ) {
-                    var coreKey = {
-                        core_id: result[0].id,
-                        public_key: public_key
-                    };
-                    model.saveCoreKey(coreKey);
-                }
-            }, function (err){
-                return false;
-            });
-        }
-        catch (ex) {
-            logger.error("Error saving new core key ", ex);
-        }
+        model.saveCoreKey({core_id: coreid, public_key: public_key});
         return false;
     },
 
@@ -76,10 +61,10 @@ DeviceServer.prototype = {
         try {
             var attribs = this._attribsByID[coreid];
             var that = this;
-
+            
             model.saveCore(attribs).then(function(result){
                 if ( result.insertId ) {
-                    that._attribsByID[coreid]["id"] = result["insertId"];
+                    attribs.id = result.insertId;
                 }
                 return true;
             }, function (err) {
@@ -129,6 +114,9 @@ DeviceServer.prototype = {
     setCoreAttribute: function (coreid, name, value) {
         this._attribsByID[coreid] = this._attribsByID[coreid] || {};
         this._attribsByID[coreid][name] = value;
+        if ( !this._attribsByID[coreid].core_id ) {
+            this._attribsByID[coreid]["core_id"] = coreid;
+        }
         this.saveCoreData(coreid);
         return true;
     },
@@ -137,6 +125,9 @@ DeviceServer.prototype = {
         this._attribsByID[coreid] = this._attribsByID[coreid] || {};
         for(var key in objects) {
             this._attribsByID[coreid][key] = objects[key];
+        }
+        if ( !this._attribsByID[coreid].core_id ) {
+            this._attribsByID[coreid]["core_id"] = coreid;
         }
         this.saveCoreData(coreid);
         return
