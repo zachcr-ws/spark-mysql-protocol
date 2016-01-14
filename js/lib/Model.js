@@ -13,11 +13,15 @@ var Model = {
 	saveCore: function (core) {
 		if( !core.id ){
 			var name = typeof core.name == "undefined" ? "" : core.name;
-			var values = [0, name, core.core_id, core.registrar, core.timestamp];
+			var values = [0, name, core.coreID, core.registrar, core.timestamp];
 			return client.save("core", values);
 		} else {
 			var id = core.id;
+			core.core_id = core.coreID;
+
 			delete core.id;
+			delete core.coreID;
+			
 			return client.update("core", core, ["id=?"], [id]);
 		}
 	},

@@ -89,8 +89,9 @@ DeviceServer.prototype = {
         model.allCore().then(function(result){
             for (var i in result) {
                 var core = result[i];
-                attribsByID[core.core_id] = core;
-                that._allIDs[core.core_id] = true;
+                core.coreID = core.core_id;
+                attribsByID[core.coreID] = core;
+                that._allIDs[core.coreID] = true;
             }
         }, function(err){
             logger.error("Get AllCore Error: ", err);
@@ -106,7 +107,7 @@ DeviceServer.prototype = {
     getCoreAttributes: function (coreid) {
         //assert this exists and is set properly when asked.
         this._attribsByID[coreid] = this._attribsByID[coreid] || {};
-        //this._attribsByID[coreid]["core_id"] = coreid;
+        //this._attribsByID[coreid]["coreID"] = coreid;
 
         return this._attribsByID[coreid];
     },
@@ -114,8 +115,8 @@ DeviceServer.prototype = {
     setCoreAttribute: function (coreid, name, value) {
         this._attribsByID[coreid] = this._attribsByID[coreid] || {};
         this._attribsByID[coreid][name] = value;
-        if ( !this._attribsByID[coreid].core_id ) {
-            this._attribsByID[coreid]["core_id"] = coreid;
+        if ( !this._attribsByID[coreid].coreID ) {
+            this._attribsByID[coreid]["coreID"] = coreid;
         }
         this.saveCoreData(coreid);
         return true;
@@ -126,8 +127,8 @@ DeviceServer.prototype = {
         for(var key in objects) {
             this._attribsByID[coreid][key] = objects[key];
         }
-        if ( !this._attribsByID[coreid].core_id ) {
-            this._attribsByID[coreid]["core_id"] = coreid;
+        if ( !this._attribsByID[coreid].coreID ) {
+            this._attribsByID[coreid]["coreID"] = coreid;
         }
         this.saveCoreData(coreid);
         return
@@ -162,7 +163,7 @@ DeviceServer.prototype = {
     },
 
 
-//id: core.core_id,
+//id: core.coreID,
 //name: core.name || null,
 //last_app: core.last_flashed_app_name || null,
 //last_heard: null
@@ -198,7 +199,7 @@ DeviceServer.prototype = {
                             var coreid = this.getHexCoreID();
                             that._allCoresByID[coreid] = core;
                             that._attribsByID[coreid] = that._attribsByID[coreid] || {
-                                core_id: coreid,
+                                coreID: coreid,
                                 name: null,
                                 ip: this.getRemoteIPAddress(),
                                 product_id: this.spark_product_id,
