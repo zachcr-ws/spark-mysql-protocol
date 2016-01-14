@@ -88,7 +88,7 @@ DeviceServer.prototype = {
 
         model.allCore().then(function(result){
             for (var i in result) {
-                var core = result[0];
+                var core = result[i];
                 attribsByID[core.core_id] = core;
                 that._allIDs[core.core_id] = true;
             }
