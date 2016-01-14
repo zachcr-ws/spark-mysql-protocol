@@ -55,16 +55,12 @@ DeviceServer.prototype = {
     addCoreKey: function(coreid, public_key) {
         try{
             model.findCore(coreid).then(function (result){
-                if ( result[0].id ){
+                if ( result[0].id ) {
                     var coreKey = {
                         core_id: result[0].id,
                         public_key: public_key
                     };
-                    model.saveCoreKey(coreKey).then(function(result){
-                        return true
-                    }, function ( err ){
-                        return false;
-                    });
+                    model.saveCoreKey(coreKey);
                 }
             }, function (err){
                 return false;
@@ -109,7 +105,7 @@ DeviceServer.prototype = {
             for (var i in result) {
                 var core = result[0];
                 attribsByID[core.core_id] = core;
-                that._allIDs[core.core_id ] = true;
+                that._allIDs[core.core_id] = true;
             }
         }, function(err){
             logger.error("Get AllCore Error: ", err);

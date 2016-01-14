@@ -23,14 +23,15 @@ var Model = {
 	},
 
 	saveCoreKey: function (corekey) {
-		if( !corekey.id ){
-			var values = [0, corekey.core_id, corekey.public_key];
-			return client.save("core_key", values);
-		} else {
-			var id = corekey.id;
-			delete corekey.id;
-			return client.update("core_key", corekey, ["id=?"], [id]);
-		}
+		client.find("core_key", ["core_id=?"], [corekey.core_id]).then(function(result){
+			if ( result.length <= 0 ){
+				return client.save("core_key", [corekey.core_id, corekey.public_key]);
+			} else {
+				return client.update("core_key", corekey, ["core_id=?"], [corekey.core_id]);
+			}
+		}, function(err){
+			console.log("Save Core Key Error: ",err);
+		});
 	},
 
 	findCore: function (coreid) {
