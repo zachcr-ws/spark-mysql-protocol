@@ -55,7 +55,7 @@ DeviceServer.prototype = {
     addCoreKey: function(coreid, public_key) {
         try{
             model.findCore(coreid).then(function (result){
-                if ( result[0].id ) {
+                if ( result.length >= 1 && result[0].id ) {
                     var coreKey = {
                         core_id: result[0].id,
                         public_key: public_key
