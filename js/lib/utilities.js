@@ -335,9 +335,11 @@ module.exports = {
 
     get_core_key: function(coreid, callback) {
         model.findCoreKey(coreid).then(function( result ){
-            var keyStr = result[0].public_key;
-            var public_key = ursa.createPublicKey(keyStr, 'binary');
-            callback(public_key);
+            if(result.length > 0){
+                var keyStr = result[0].public_key;
+                var public_key = ursa.createPublicKey(keyStr, 'binary');
+                callback(public_key);
+            }
         }, function( err ){
             logger.log("Get Core Key Error: ", Error);
         });

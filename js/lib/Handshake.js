@@ -400,7 +400,7 @@ Handshake.prototype = extend(IHandshake.prototype, {
                 if (!public_key) {
                     that.handshakeFail("couldn't find key for core: " + this.coreID);
 					if (that.coreProvidedPem) {
-						utilities.save_handshake_key(that.coreID, that.coreProvidedPem);
+						//utilities.save_handshake_key(that.coreID, that.coreProvidedPem);
 					}
 
                     return;
