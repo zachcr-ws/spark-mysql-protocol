@@ -12,11 +12,12 @@ var SlaveClient = {};
 var Driver = undefined;
 
 var MysqlDriver = function(host_master, host_slave, user, password, dbname, limit) {
-	MasterClient = mysql.createConnection({
+	MasterClient = mysql.createPool({
 		host: host_master,
 		user: user,
 		password: password,
-		database: dbname
+		database: dbname,
+		connectionLimit: limit
 	});
 
 	SlaveClient = mysql.createPool({
@@ -32,9 +33,13 @@ MysqlDriver.prototype = {
 	query: function(query_string, values){
 		var defer = when.defer();
 
-		MasterClient.query(query_string, values, function(err, rows, fields){
+		MasterClient.getConnection(function(err, con) {
 			if(err) defer.reject(err);
-			defer.resolve(rows, fields);
+			con.query(query_string, values, function() {
+				con.release();
+				if(err) defer.reject(err);
+				defer.resolve(rows);
+			});
 		});
 
 		return defer.promise;
