@@ -35,7 +35,7 @@ MysqlDriver.prototype = {
 
 		MasterClient.getConnection(function(err, con) {
 			if(err) defer.reject(err);
-			con.query(query_string, values, function() {
+			con.query(query_string, values, function(err, rows, feilds) {
 				con.release();
 				if(err) defer.reject(err);
 				defer.resolve(rows);
