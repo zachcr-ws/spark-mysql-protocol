@@ -44,3 +44,7 @@ client.slave_query(query_string, values).then(...);    // slave node read action
 * limit: String --- limit
 * sets: object --- exp: {"username" : "ZachBergh"}
 * query_string --- original query_string, params use '?': "select * from user where id=?"
+
+### Claim Code
+
+Send by soft-AP protocal, and saved in core_key.

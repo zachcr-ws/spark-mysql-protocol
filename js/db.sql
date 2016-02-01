@@ -39,6 +39,7 @@ CREATE TABLE `core` (
 DROP TABLE IF EXISTS `core_key`;
 CREATE TABLE `core_key` (
   `core_id` varchar(255) NOT NULL,
+  `claim_code` varchar(255) NOT NULL,
   `public_key` text NOT NULL,
   PRIMARY KEY (`core_id`),
   UNIQUE KEY `cidindex` (`core_id`) USING BTREE

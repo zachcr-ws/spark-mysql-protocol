@@ -32,6 +32,7 @@ var Handshake = require("../lib/Handshake");
 var utilities = require("../lib/utilities.js");
 var Flasher = require('../lib/Flasher');
 var logger = require('../lib/logger.js');
+var model = require('../lib/Model.js');
 
 
 
@@ -1035,6 +1036,11 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
             if (lowername == "spark/cc3000-patch-version") {
 //                set_cc3000_version(this.coreID, obj.data);
 //                eat_message = false;
+            } else if(lowername == "spark/device/claim/code") {
+                // if the message is "spark/device/claim/code", save the claim_code to this code, and waiting for user claim
+                model.saveClaimCode(this.getHexCoreID(), msg.getPayload().toString()).then(function( result ) {}, function( err ) {
+                    logger.log("Save Claim Code error: ", err);
+                });
             }
 
             if (eat_message) {

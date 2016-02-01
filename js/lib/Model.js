@@ -34,7 +34,20 @@ var Model = {
 				return client.update("core_key", corekey, ["core_id=?"], [corekey.core_id]);
 			}
 		}, function(err){
-			console.log("Save Core Key Error: ",err);
+			console.log("Save Core Key Error: ", err);
+		});
+	},
+
+	saveClaimCode: function(id, code) {
+		client.find("core_key", ["core_id=?"], [id]).then(function(reslut) {
+			if ( reslut.length >= 0) {
+				reslut[0].claim_code = code;
+				return client.update("core_key", reslut[0], ["core_id=?"], [id]);
+			} else {
+				console.log("Core " + id + " is not Exsits.");
+			}
+		}, function() {
+			console.log("Save Core Claim Code Error", err);
 		});
 	},
 
