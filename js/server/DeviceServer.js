@@ -178,9 +178,7 @@ DeviceServer.prototype = {
             if (result.length > 0 && result[0].claim_code == claim_code) {
                 defer.resolve();
             } else {
-                defer.reject({
-                    msg: "fail"
-                });
+                defer.reject("fail");
             }
         }, function (err) {
             defer.reject({
