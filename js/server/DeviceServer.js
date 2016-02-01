@@ -167,6 +167,30 @@ DeviceServer.prototype = {
         return this._allCoresByID;
     },
 
+    /**
+     * return one core's claim_code and compare them
+     * @returns {promise}
+     */
+    getBindClaimCode: function(coreid, claim_code) {
+        var defer = when.defer();
+
+        model.findCoreKey(coreid).then(function (result) {
+            if (result.length > 0 && result[0].claim_code == claim_code) {
+                defer.resolve();
+            } else {
+                defer.reject({
+                    msg: "fail"
+                });
+            }
+        }, function (err) {
+            defer.reject({
+                error: err
+            });
+        });
+
+        return defer.promise;
+    },
+
 
 //id: core.coreID,
 //name: core.name || null,

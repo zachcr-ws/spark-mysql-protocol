@@ -6,7 +6,8 @@
  *      findCore: get one core
  */
 
-var client = require("./MysqlDb.js").InitMysqlClient();;
+var client = require("./MysqlDb.js").InitMysqlClient();
+var when = require("when");
 
 var Model = {
 
@@ -40,16 +41,24 @@ var Model = {
 	},
 
 	saveClaimCode: function(id, code) {
+		var defer = when.defer();
+
 		client.find("core_key", ["core_id=?"], [id]).then(function(reslut) {
 			if ( reslut.length >= 0) {
 				reslut[0].claim_code = code;
-				return client.update("core_key", reslut[0], ["core_id=?"], [id]);
+				client.update("core_key", reslut[0], ["core_id=?"], [id]).then(function(resp) {
+					defer.resolve(reslut);
+				}, function(err) {
+					defer.reject(err);
+				});
 			} else {
-				console.log("Core " + id + " is not Exsits.");
+				defer.reject("Core " + id + " is not Exsits.");
 			}
 		}, function() {
-			console.log("Save Core Claim Code Error", err);
+			defer.reject(err);
 		});
+
+		return defer.promise;
 	},
 
 	findCore: function (coreid) {
