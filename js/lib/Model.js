@@ -29,9 +29,10 @@ var Model = {
 	saveCoreKey: function (corekey) {
 		client.find("core_key", ["core_id=?"], [corekey.core_id]).then(function(result){
 			if ( result.length <= 0 ){
-				return client.save("core_key", [corekey.core_id, corekey.public_key]);
+				return client.save("core_key", [corekey.core_id, "", corekey.public_key]);
 			} else {
-				return client.update("core_key", corekey, ["core_id=?"], [corekey.core_id]);
+				reslut[0].public_key = corekey.public_key;
+				return client.update("core_key", reslut[0], ["core_id=?"], [corekey.core_id]);
 			}
 		}, function(err){
 			console.log("Save Core Key Error: ", err);
