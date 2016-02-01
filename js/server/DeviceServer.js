@@ -171,7 +171,7 @@ DeviceServer.prototype = {
      * return one core's claim_code and compare them
      * @returns {promise}
      */
-    getBindClaimCode: function(coreid, claim_code) {
+    compareClaimCode: function(coreid, claim_code) {
         var defer = when.defer();
 
         model.findCoreKey(coreid).then(function (result) {
