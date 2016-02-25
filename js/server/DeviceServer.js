@@ -133,7 +133,6 @@ DeviceServer.prototype = {
             this._attribsByID[coreid]["coreID"] = coreid;
         }
         this.saveCoreData(coreid).then(function(){
-            that.loadCoreData();
             if(callback) callback();
         });
         return;
