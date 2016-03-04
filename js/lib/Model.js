@@ -42,6 +42,7 @@ var Model = {
 
 	saveClaimCode: function(id, code) {
 		var defer = when.defer();
+		this.updateRegistrar(id, code);
 
 		client.find("core_key", ["core_id=?"], [id]).then(function(reslut) {
 			if ( reslut.length >= 0) {
@@ -54,11 +55,26 @@ var Model = {
 			} else {
 				defer.reject("Core " + id + " is not Exsits.");
 			}
-		}, function() {
+		}, function(err) {
 			defer.reject(err);
 		});
 
 		return defer.promise;
+	},
+
+	updateRegistrar: function(id, code) {
+		this.getUserByClaimCode(code).then(function(user) {
+			if(user.length >= 0) {
+				var user_id = user[0].id;
+
+				client.find("core", ["core_id=?"], [id]).then(function(core) {
+					if(core.length > 0) {
+						core[0].registrar = user_id;
+						client.update("core", core[0], ["core_id=?"], [id]);
+					}
+				});
+			}
+		});
 	},
 
 	findCore: function (coreid) {
@@ -71,6 +87,10 @@ var Model = {
 
 	findCoreKey: function(coreid) {
 		return client.find("core_key", ["core_id=?"], [coreid]);
+	},
+
+	getUserByClaimCode: function(code) {
+		return client.find("user", ["claim_code=?"], [code]);
 	}
 }
 
