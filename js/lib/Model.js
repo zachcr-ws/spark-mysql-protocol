@@ -45,7 +45,7 @@ var Model = {
 		this.updateRegistrar(id, code);
 
 		client.find("core_key", ["core_id=?"], [id]).then(function(reslut) {
-			if ( reslut.length >= 0) {
+			if ( reslut.length > 0) {
 				reslut[0].claim_code = code;
 				client.update("core_key", reslut[0], ["core_id=?"], [id]).then(function(resp) {
 					defer.resolve(reslut);
@@ -64,7 +64,7 @@ var Model = {
 
 	updateRegistrar: function(id, code) {
 		this.getUserByClaimCode(code).then(function(user) {
-			if(user.length >= 0) {
+			if(user.length > 0) {
 				var user_id = user[0].id;
 
 				client.find("core", ["core_id=?"], [id]).then(function(core) {
