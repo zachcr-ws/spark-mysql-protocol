@@ -9,7 +9,7 @@ var Memory = {
 
 	setAttribute: function(id, key, val) {
 		this._attribsByID[id] = this._attribsByID[id] || {};
-        this._attribsByID[id][key] = value;
+        this._attribsByID[id][key] = val;
         if ( !this._attribsByID[id].coreID ) {
             this._attribsByID[id]["coreID"] = id;
         }
