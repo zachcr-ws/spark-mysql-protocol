@@ -1,21 +1,21 @@
 /*
-	function: Save data in memory
+    function: Save data in memory
 */
 
 var Memory = {
-	_allCoresByID = null,
-	_attribsByID = null,
-	_allIDs = null,
+    _allCoresByID: null,
+    _attribsByID: null,
+    _allIDs: null,
 
-	setAttribute: function(id, key, val) {
-		this._attribsByID[id] = this._attribsByID[id] || {};
+    setAttribute: function(id, key, val) {
+        this._attribsByID[id] = this._attribsByID[id] || {};
         this._attribsByID[id][key] = val;
         if ( !this._attribsByID[id].coreID ) {
             this._attribsByID[id]["coreID"] = id;
         }
-	},
+    },
 
-	setAttributes: function(id, objects) {
+    setAttributes: function(id, objects) {
         this._attribsByID[id] = this._attribsByID[id] || {};
         for(var key in objects) {
             this._attribsByID[id][key] = objects[key];
@@ -23,7 +23,7 @@ var Memory = {
         if ( !this._attribsByID[id].coreID ) {
             this._attribsByID[id]["coreID"] = id;
         }
-	}
+    }
 }
 
-module.exports = Model;
+module.exports = Memory;
