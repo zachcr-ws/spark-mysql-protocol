@@ -7,6 +7,7 @@
  */
 
 var client = require("./MysqlDb.js").InitMysqlClient();
+var memo = require("./Memory.js");
 var when = require("when");
 
 var Model = {
@@ -70,6 +71,7 @@ var Model = {
 				client.find("core", ["core_id=?"], [id]).then(function(core) {
 					if(core.length > 0) {
 						core[0].registrar = user_id;
+						memo.setAttribute(id, "registrar", user_id);
 						client.update("core", core[0], ["core_id=?"], [id]);
 					}
 				});

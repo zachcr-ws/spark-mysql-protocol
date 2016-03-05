@@ -22,6 +22,7 @@ var EventPublisher = require('../lib/EventPublisher.js');
 var utilities = require('../lib/utilities.js');
 var logger = require('../lib/logger.js');
 var model = require("../lib/Model.js");
+var memo = require("../lib/Memory.js");
 var crypto = require('crypto');
 var ursa = require('ursa');
 var when = require('when');
@@ -35,18 +36,14 @@ var DeviceServer = function (options) {
     this.options = options || {};
     settings.coreKeysDir = this.options.coreKeysDir = this.options.coreKeysDir || settings.coreKeysDir;
 
-    this._allCoresByID = {};
-    this._attribsByID = {};
-    this._allIDs = {};
+    memo._allCoresByID = {};
+    memo._attribsByID = {};
+    memo._allIDs = {};
 
     this.init();
 };
 
 DeviceServer.prototype = {
-    _allCoresByID: null,
-    _attribsByID: null,
-    _allIDs: null,
-
 
     init: function () {
         this.loadCoreData();
@@ -60,7 +57,7 @@ DeviceServer.prototype = {
     saveCoreData: function (coreid) {
         var defer = when.defer();
         try {
-            var attribs = this._attribsByID[coreid];
+            var attribs = memo._attribsByID[coreid];
             var that = this;
             
             model.saveCore(attribs).then(function(result){
@@ -86,52 +83,37 @@ DeviceServer.prototype = {
 
     loadCoreData: function () {
         var attribsByID = {};
-        var that = this;
 
         model.allCore().then(function(result){
             for (var i in result) {
                 var core = result[i];
                 core.coreID = core.core_id;
                 attribsByID[core.coreID] = core;
-                that._allIDs[core.coreID] = true;
+                memo._allIDs[core.coreID] = true;
             }
-            that._attribsByID = attribsByID;
+            memo._attribsByID = attribsByID;
         }, function(err){
             logger.error("Get AllCore Error: ", err);
         });
     },
 
     getCore: function (coreid) {
-        return this._allCoresByID[coreid];
+        return memo._allCoresByID[coreid];
     },
 
     getCoreAttributes: function (coreid) {
-        //assert this exists and is set properly when asked.
-        this._attribsByID[coreid] = this._attribsByID[coreid] || {};
-        //this._attribsByID[coreid]["coreID"] = coreid;
-
-        return this._attribsByID[coreid];
+        memo._attribsByID[coreid] = memo._attribsByID[coreid] || {};
+        return memo._attribsByID[coreid];
     },
 
     setCoreAttribute: function (coreid, name, value) {
-        this._attribsByID[coreid] = this._attribsByID[coreid] || {};
-        this._attribsByID[coreid][name] = value;
-        if ( !this._attribsByID[coreid].coreID ) {
-            this._attribsByID[coreid]["coreID"] = coreid;
-        }
+        memo.setAttribute(coreid, name, value);
         this.saveCoreData(coreid);
         return true;
     },
 
     setCoreAttributes: function(coreid, objects, callback) {
-        var that = this;
-        this._attribsByID[coreid] = this._attribsByID[coreid] || {};
-        for(var key in objects) {
-            this._attribsByID[coreid][key] = objects[key];
-        }
-        if ( !this._attribsByID[coreid].coreID ) {
-            this._attribsByID[coreid]["coreID"] = coreid;
-        }
+        memo.setAttributes(coreid, objects);
         this.saveCoreData(coreid).then(function(){
             if(callback) callback();
         });
@@ -140,11 +122,11 @@ DeviceServer.prototype = {
 
     getCoreByName: function (name) {
         //var cores = this._allCoresByID;
-        var cores = this._attribsByID;
+        var cores = memo._attribsByID;
         for (var coreid in cores) {
             var attribs = cores[coreid];
             if (attribs && (attribs.name == name)) {
-                return this._allCoresByID[coreid];
+                return memo._allCoresByID[coreid];
             }
         }
         return null;
@@ -155,7 +137,7 @@ DeviceServer.prototype = {
      * @returns {null}
      */
     getAllCoreIDs: function () {
-        return this._allIDs;
+        return memo._allIDs;
     },
 
     /**
@@ -163,7 +145,7 @@ DeviceServer.prototype = {
      * @returns {null}
      */
     getAllCores: function () {
-        return this._allCoresByID;
+        return memo._allCoresByID;
     },
 
     /**
@@ -223,8 +205,8 @@ DeviceServer.prototype = {
                         core.on('ready', function () {
                             logger.log("Core online!");
                             var coreid = this.getHexCoreID();
-                            that._allCoresByID[coreid] = core;
-                            that._attribsByID[coreid] = that._attribsByID[coreid] || {
+                            memo._allCoresByID[coreid] = core;
+                            memo._attribsByID[coreid] = memo._attribsByID[coreid] || {
                                 coreID: coreid,
                                 name: null,
                                 ip: this.getRemoteIPAddress(),
