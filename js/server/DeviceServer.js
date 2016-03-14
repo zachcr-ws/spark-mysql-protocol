@@ -29,6 +29,7 @@ var when = require('when');
 var path = require('path');
 var net = require('net');
 var fs = require('fs');
+var moment = require('moment');
 
 
 var DeviceServer = function (options) {
@@ -213,9 +214,24 @@ DeviceServer.prototype = {
                                 product_id: this.spark_product_id,
                                 firmware_version: this.product_firmware_version
                             };
+
+                            core.onCorePubHeard(
+                                "spark/status",
+                                "online",
+                                60,
+                                moment().toISOString(),
+                                coreid
+                            );
                         });
                         core.on('disconnect', function (msg) {
                             logger.log("Session ended for " + core._connection_key);
+                            core.onCorePubHeard(
+                                "spark/status",
+                                "offline",
+                                60,
+                                moment().toISOString(),
+                                coreid
+                            );
                             delete _cores[key];
                         });
                     }

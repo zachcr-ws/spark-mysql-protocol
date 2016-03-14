@@ -1,6 +1,6 @@
 {
     "name": "spark-mysql-protocol",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "main": "./index.js",
     "description": "spark-protocol's mysql storage version.",
     "repository": {
