@@ -16,14 +16,14 @@ var Model = {
 		if( !core.id ){
 			var name = typeof core.name == "undefined" ? "" : core.name;
 			var firmware = typeof core.firmware_version == "undefined" ? "" : core.firmware_version;
-			//var group = (typeof core.group == "undefined" || core.group == 0) ? 1 : core.group;
+			var group_id = (typeof core.group_id == "undefined") ? 0 : core.group_id;
 			var values = [0, 
-				name, 
-				core.coreID, 
+				name,
+				core.coreID,
 				core.registrar,
 				core.timestamp,
-				firmware
-				//group
+				firmware,
+				group_id
 			];
 			return client.save("core", values);
 		} else {
