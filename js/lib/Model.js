@@ -18,13 +18,10 @@ var Model = {
 			var values = [0, name, core.coreID, core.registrar, core.timestamp, core.firmware_version];
 			return client.save("core", values);
 		} else {
-			var id = core.id;
 			core.core_id = core.coreID;
-
-			delete core.id;
 			delete core.coreID;
-			
-			return client.update("core", core, ["id=?"], [id]);
+
+			return client.update("core", core, ["id=?"], [core.id]);
 		}
 	},
 
