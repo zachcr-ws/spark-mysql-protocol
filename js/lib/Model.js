@@ -16,7 +16,7 @@ var Model = {
 		if( !core.id ){
 			var name = typeof core.name == "undefined" ? "" : core.name;
 			var firmware = typeof core.firmware_version == "undefined" ? "" : core.firmware_version;
-			var group = typeof core.group == "undefined" ? "" : 0;
+			var group = typeof core.group == "undefined" ? 0 : core.group;
 			var values = [0, 
 				name, 
 				core.coreID, 
