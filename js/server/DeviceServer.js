@@ -191,6 +191,7 @@ DeviceServer.prototype = {
             server = net.createServer(function (socket) {
                 process.nextTick(function () {
                     try {
+                        var publisher = new EventPublisher();
                         var key = "_" + connId++;
                         logger.log("Connection from: " + socket.remoteAddress + ", connId: " + connId);
 
@@ -212,10 +213,11 @@ DeviceServer.prototype = {
                                 name: null,
                                 ip: this.getRemoteIPAddress(),
                                 product_id: this.spark_product_id,
-                                firmware_version: this.product_firmware_version
+                                firmware_version: this.product_firmware_version,
+                                group: 0
                             };
 
-                            core.onCorePubHeard(
+                            publisher.publish(
                                 "spark/status",
                                 "online",
                                 60,
@@ -225,12 +227,12 @@ DeviceServer.prototype = {
                         });
                         core.on('disconnect', function (msg) {
                             logger.log("Session ended for " + core._connection_key);
-                            core.onCorePubHeard(
+                            publisher.publish(
                                 "spark/status",
                                 "offline",
                                 60,
                                 moment().toISOString(),
-                                coreid
+                                this.getHexCoreID()
                             );
                             delete _cores[key];
                         });

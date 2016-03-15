@@ -28,6 +28,7 @@ CREATE TABLE `core` (
   `registrar` int(11) NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `firmware_version` varchar(50) DEFAULT NULL,
+  `group` int(11) DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `core_id` (`core_id`) USING BTREE,
   KEY `user_id` (`registrar`) USING BTREE,
