@@ -213,8 +213,8 @@ DeviceServer.prototype = {
                                 name: null,
                                 ip: this.getRemoteIPAddress(),
                                 product_id: this.spark_product_id,
-                                firmware_version: this.product_firmware_version,
-                                group: 0
+                                firmware_version: this.product_firmware_version
+                                //group: 1
                             };
 
                             publisher.publish(
