@@ -64,6 +64,11 @@ DeviceServer.prototype = {
             model.saveCore(attribs).then(function(result){
                 if ( result.insertId ) {
                     attribs.id = result.insertId;
+                    memo._allIDs[coreid] = true;
+                    if(typeof attribs["group_id"] == "undefined") {
+                        memo._attribsByID[coreid].group_id = 0;
+                        memo._attribsByID[coreid].name = "";
+                    }
                 }
                 defer.resolve()
             }, function (err) {
