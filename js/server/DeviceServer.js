@@ -62,15 +62,8 @@ DeviceServer.prototype = {
             var that = this;
             
             model.saveCore(attribs).then(function(result){
-                if ( result.insertId ) {
-                    attribs.id = result.insertId;
-                    memo._allIDs[coreid] = true;
-                    if(typeof attribs["group_id"] == "undefined") {
-                        memo._attribsByID[coreid].group_id = 0;
-                        memo._attribsByID[coreid].name = "";
-                    }
-                }
-                defer.resolve()
+                that.loadCore(coreid);
+                defer.resolve();
             }, function (err) {
                 if( err.code && err.code == "ER_DUP_ENTRY" ) {
                     logger.log("coreid already exist.");
@@ -100,6 +93,15 @@ DeviceServer.prototype = {
             memo._attribsByID = attribsByID;
         }, function(err){
             logger.error("Get AllCore Error: ", err);
+        });
+    },
+
+    loadCore: function(coreid) {
+        model.findCore(coreid).then(function(result) {
+            var core = result[0];
+            core.coreID = core.core_id;
+            memo._allIDs[core.coreID] = true;
+            memo._attribsByID[core.coreID] = core;
         });
     },
 
