@@ -211,8 +211,8 @@ DeviceServer.prototype = {
 
                         _cores[key] = core;
                         core.on('ready', function () {
-                            logger.log("Core online!");
                             var coreid = this.getHexCoreID();
+                            logger.log("Core " + coreid + " online!");
                             memo._allCoresByID[coreid] = core;
                             memo._attribsByID[coreid] = memo._attribsByID[coreid] || {
                                 coreID: coreid,
@@ -241,7 +241,9 @@ DeviceServer.prototype = {
                             }
                         });
                         core.on('disconnect', function (msg) {
-                            logger.log("Session ended for " + core._connection_key);
+                            var coreid = this.getHexCoreID();
+                            logger.log("Core offline:" + coreid);
+                            //logger.log("Session ended for " + core._connection_key);
                             delete _cores[key];
 
                             if(global.publisher) {
@@ -252,7 +254,7 @@ DeviceServer.prototype = {
                                     "offline",
                                     60,
                                     moment().toISOString(),
-                                    this.getHexCoreID()
+                                    coreid
                                 );
                             }
                         });
