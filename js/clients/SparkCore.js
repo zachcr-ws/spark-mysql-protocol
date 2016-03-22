@@ -132,13 +132,13 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         //oh hai!
         this._connStartTime = new Date();
 
-        logger.log("on ready", {
-            coreID: this.getHexCoreID(),
-            ip: this.getRemoteIPAddress(),
-            product_id: this.spark_product_id,
-            firmware_version: this.product_firmware_version,
-            cache_key: this._connection_key
-        });
+        // logger.log("on ready", {
+        //     coreID: this.getHexCoreID(),
+        //     ip: this.getRemoteIPAddress(),
+        //     product_id: this.spark_product_id,
+        //     firmware_version: this.product_firmware_version,
+        //     cache_key: this._connection_key
+        // });
 
         //catch any and all describe responses
         this.on('msg_describereturn', this.onDescribeReturn.bind(this));
@@ -1055,7 +1055,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
             if (!global.publisher) {
                 return;
             }
-
+            
             if (!global.publisher.publish(isPublic, obj.name, obj.userid, obj.data, obj.ttl, obj.published_at, this.getHexCoreID())) {
                 //this core is over its limit, and that message was not sent.
                 this.sendReply("EventSlowdown", msg.getId());

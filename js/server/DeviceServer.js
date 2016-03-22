@@ -198,7 +198,6 @@ DeviceServer.prototype = {
             server = net.createServer(function (socket) {
                 process.nextTick(function () {
                     try {
-                        var publisher = new EventPublisher();
                         var key = "_" + connId++;
                         logger.log("Connection from: " + socket.remoteAddress + ", connId: " + connId);
 
@@ -224,24 +223,38 @@ DeviceServer.prototype = {
                                 group_id: 0
                             };
 
-                            publisher.publish(
-                                "spark/status",
-                                "online",
-                                60,
-                                moment().toISOString(),
-                                coreid
-                            );
+                            if(memo._attribsByID[coreid].firmware_version == null
+                            || memo._attribsByID[coreid].firmware_version == "") {
+                                that.setCoreAttribute(coreid, "firmware_version", this.product_firmware_version);
+                            }
+
+                            if(global.publisher) {
+                                global.publisher.publish(
+                                    true,
+                                    "spark/status",
+                                    undefined,
+                                    "online",
+                                    60,
+                                    moment().toISOString(),
+                                    coreid
+                                );
+                            }
                         });
                         core.on('disconnect', function (msg) {
                             logger.log("Session ended for " + core._connection_key);
-                            publisher.publish(
-                                "spark/status",
-                                "offline",
-                                60,
-                                moment().toISOString(),
-                                this.getHexCoreID()
-                            );
                             delete _cores[key];
+
+                            if(global.publisher) {
+                                global.publisher.publish(
+                                    true,
+                                    "spark/status",
+                                    undefined,
+                                    "offline",
+                                    60,
+                                    moment().toISOString(),
+                                    this.getHexCoreID()
+                                );
+                            }
                         });
                     }
                     catch (ex) {
