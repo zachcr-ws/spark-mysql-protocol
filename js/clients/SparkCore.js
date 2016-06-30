@@ -430,7 +430,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
             this.sendReply("PingAck", msg.getId());
             return;
         }
-        console.log("routeMessage", msg, msg.getId())
+
         if (!msg || (msg.getId() != nextPeerCounter)) {
             logger.log("got counter ", msg.getId(), " expecting ", nextPeerCounter, {
                 coreID: this.getHexCoreID()
