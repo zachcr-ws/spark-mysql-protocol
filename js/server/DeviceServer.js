@@ -248,7 +248,6 @@ DeviceServer.prototype = {
                             //logger.log("Session ended for " + core._connection_key);
                             delete _cores[key];
                             delete memo._allCoresByID[coreid];
-                            delete memo._attribsByID[coreid];
 
                             if (global.publisher) {
                                 global.publisher.publish(
