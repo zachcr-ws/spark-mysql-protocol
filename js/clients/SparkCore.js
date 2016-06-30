@@ -1,19 +1,19 @@
 /*
-*   Copyright (c) 2015 Particle Industries, Inc.  All rights reserved.
-*
-*   This program is free software; you can redistribute it and/or
-*   modify it under the terms of the GNU Lesser General Public
-*   License as published by the Free Software Foundation, either
-*   version 3 of the License, or (at your option) any later version.
-*
-*   This program is distributed in the hope that it will be useful,
-*   but WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*   Lesser General Public License for more details.
-*
-*   You should have received a copy of the GNU Lesser General Public
-*   License along with this program; if not, see <http://www.gnu.org/licenses/>.
-*/
+ *   Copyright (c) 2015 Particle Industries, Inc.  All rights reserved.
+ *
+ *   This program is free software; you can redistribute it and/or
+ *   modify it under the terms of the GNU Lesser General Public
+ *   License as published by the Free Software Foundation, either
+ *   version 3 of the License, or (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *   Lesser General Public License for more details.
+ *
+ *   You should have received a copy of the GNU Lesser General Public
+ *   License along with this program; if not, see <http://www.gnu.org/licenses/>.
+ */
 
 
 var EventEmitter = require('events').EventEmitter;
@@ -59,7 +59,7 @@ var model = require('../lib/Model.js');
  * Implementation of the Spark Core messaging protocol
  * @SparkCore
  */
-var SparkCore = function (options) {
+var SparkCore = function(options) {
     if (options) {
         this.options = extend(this.options, options);
     }
@@ -104,21 +104,25 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
     /**
      * configure our socket and start the handshake
      */
-    startupProtocol: function () {
+    startupProtocol: function() {
         var that = this;
         this.socket.setNoDelay(true);
+        this.socket.setTimeout(30 * 1000);
         this.socket.setKeepAlive(true, 15 * 1000); //every 15 second(s)
-        this.socket.on('error', function (err) {
+        this.socket.on('error', function(err) {
             that.disconnect("socket error " + err);
         });
-
-        this.socket.on('close', function (err) { that.disconnect("socket close " + err); });
-        this.socket.on('timeout', function (err) { that.disconnect("socket timeout " + err); });
+        this.socket.on('close', function(err) {
+            that.disconnect("socket close " + err);
+        });
+        this.socket.on('timeout', function(err) {
+            that.disconnect("socket timeout " + err);
+        });
 
         this.handshake();
     },
 
-    handshake: function () {
+    handshake: function() {
         var shaker = new this.options.HandshakeClass();
 
         //when the handshake is done, we can expect two stream properties, 'secureIn' and 'secureOut'
@@ -128,7 +132,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         );
     },
 
-    ready: function () {
+    ready: function() {
         //oh hai!
         this._connStartTime = new Date();
 
@@ -156,12 +160,11 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * @param sender
      * @param response
      */
-    sendApiResponse: function (sender, response) {
+    sendApiResponse: function(sender, response) {
         //such boom, wow, very events.
         try {
             this.emit(sender, sender, response);
-        }
-        catch (ex) {
+        } catch (ex) {
             logger.error("Error during response ", ex);
         }
     },
@@ -170,19 +173,25 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
     /**
      * Handles messages coming from the API over our message queue service
      */
-    onApiMessage: function (sender, msg) {
+    onApiMessage: function(sender, msg) {
         if (!msg) {
-            logger.log('onApiMessage - no message? got ' + JSON.stringify(arguments), { coreID: this.getHexCoreID() });
+            logger.log('onApiMessage - no message? got ' + JSON.stringify(arguments), {
+                coreID: this.getHexCoreID()
+            });
             return;
         }
         var that = this;
 
         //if we're not the owner, then the socket is busy
         var isBusy = (!this._checkOwner(null, function(err) {
-            logger.error(err + ": " + msg.cmd , { coreID: that.getHexCoreID() });
+            logger.error(err + ": " + msg.cmd, {
+                coreID: that.getHexCoreID()
+            });
         }));
         if (isBusy) {
-            this.sendApiResponse(sender, { error: "This core is locked during the flashing process." });
+            this.sendApiResponse(sender, {
+                error: "This core is locked during the flashing process."
+            });
             return;
         }
 
@@ -192,19 +201,23 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
 
                 if (isBusy) {
                     if (settings.logApiMessages) {
-                        logger.log('Describe - flashing', { coreID: that.coreID });
+                        logger.log('Describe - flashing', {
+                            coreID: that.coreID
+                        });
                     }
                     that.sendApiResponse(sender, {
                         cmd: "DescribeReturn",
                         name: msg.name,
-                        state: { f: [], v: [] },
+                        state: {
+                            f: [],
+                            v: []
+                        },
                         product_id: that.spark_product_id,
                         firmware_version: that.product_firmware_version
                     });
-                }
-                else {
+                } else {
                     when(this.ensureWeHaveIntrospectionData()).then(
-                        function () {
+                        function() {
                             that.sendApiResponse(sender, {
                                 cmd: "DescribeReturn",
                                 name: msg.name,
@@ -213,7 +226,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                                 firmware_version: that.product_firmware_version
                             });
                         },
-                        function (msg) {
+                        function(msg) {
                             that.sendApiResponse(sender, {
                                 cmd: "DescribeReturn",
                                 name: msg.name,
@@ -226,9 +239,11 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                 break;
             case "GetVar":
                 if (settings.logApiMessages) {
-                    logger.log('GetVar', { coreID: that.coreID });
+                    logger.log('GetVar', {
+                        coreID: that.coreID
+                    });
                 }
-                this.getVariable(msg.name, msg.type, function (value, buf, err) {
+                this.getVariable(msg.name, msg.type, function(value, buf, err) {
 
                     //don't forget to handle errors!
                     //if 'error' is set, then don't return the result.
@@ -245,9 +260,11 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                 break;
             case "SetVar":
                 if (settings.logApiMessages) {
-                    logger.log('SetVar', { coreID: that.coreID });
+                    logger.log('SetVar', {
+                        coreID: that.coreID
+                    });
                 }
-                this.setVariable(msg.name, msg.value, function (resp) {
+                this.setVariable(msg.name, msg.value, function(resp) {
 
                     //that.sendApiResponse(sender, resp);
 
@@ -261,9 +278,11 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                 break;
             case "CallFn":
                 if (settings.logApiMessages) {
-                    logger.log('FunCall', { coreID: that.coreID });
+                    logger.log('FunCall', {
+                        coreID: that.coreID
+                    });
                 }
-                this.callFunction(msg.name, msg.args, function (fnResult) {
+                this.callFunction(msg.name, msg.args, function(fnResult) {
                     var response = {
                         cmd: "FnReturn",
                         name: msg.name,
@@ -276,7 +295,9 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                 break;
             case "UFlash":
                 if (settings.logApiMessages) {
-                    logger.log('FlashCore', { coreID: that.coreID });
+                    logger.log('FlashCore', {
+                        coreID: that.coreID
+                    });
                 }
 
                 this.flashCore(msg.args.data, sender);
@@ -284,15 +305,25 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
 
             case "FlashKnown":
                 if (settings.logApiMessages) {
-                    logger.log('FlashKnown', { coreID: that.coreID, app: msg.app });
+                    logger.log('FlashKnown', {
+                        coreID: that.coreID,
+                        app: msg.app
+                    });
                 }
 
                 // Responsibility for sanitizing app names lies with API Service
                 // This includes only allowing apps whose binaries are deployed and thus exist
-                fs.readFile('known_firmware/' + msg.app + '_' + settings.environment + '.bin', function (err, buf) {
+                fs.readFile('known_firmware/' + msg.app + '_' + settings.environment + '.bin', function(err, buf) {
                     if (err) {
-                        logger.log("Error flashing known firmware", { coreID: that.coreID, err: err });
-                        that.sendApiResponse(sender, { cmd: "Event", name: "Update", message: "Update failed - " + JSON.stringify(err) });
+                        logger.log("Error flashing known firmware", {
+                            coreID: that.coreID,
+                            err: err
+                        });
+                        that.sendApiResponse(sender, {
+                            cmd: "Event",
+                            name: "Update",
+                            message: "Update failed - " + JSON.stringify(err)
+                        });
                         return;
                     }
 
@@ -303,17 +334,23 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
             case "RaiseHand":
                 if (isBusy) {
                     if (settings.logApiMessages) {
-                        logger.log('SignalCore - flashing', { coreID: that.coreID });
+                        logger.log('SignalCore - flashing', {
+                            coreID: that.coreID
+                        });
                     }
-                    that.sendApiResponse(sender, { cmd: "RaiseHandReturn", result: true });
-                }
-                else {
+                    that.sendApiResponse(sender, {
+                        cmd: "RaiseHandReturn",
+                        result: true
+                    });
+                } else {
                     if (settings.logApiMessages) {
-                        logger.log('SignalCore', { coreID: that.coreID });
+                        logger.log('SignalCore', {
+                            coreID: that.coreID
+                        });
                     }
 
                     var showSignal = (msg.args && msg.args.signal);
-                    this.raiseYourHand(showSignal, function (result) {
+                    this.raiseYourHand(showSignal, function(result) {
                         that.sendApiResponse(sender, {
                             cmd: "RaiseHandReturn",
                             result: result
@@ -324,13 +361,21 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                 break;
             case "Ping":
                 if (settings.logApiMessages) {
-                    logger.log('Pinged, replying', { coreID: that.coreID });
+                    logger.log('Pinged, replying', {
+                        coreID: that.coreID
+                    });
                 }
 
-                this.sendApiResponse(sender, { cmd: "Pong", online: (this.socket != null), lastPing: this._lastCorePing });
+                this.sendApiResponse(sender, {
+                    cmd: "Pong",
+                    online: (this.socket != null),
+                    lastPing: this._lastCorePing
+                });
                 break;
             default:
-                this.sendApiResponse(sender, {error: "unknown message" });
+                this.sendApiResponse(sender, {
+                    error: "unknown message"
+                });
         }
     },
 
@@ -338,10 +383,12 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * Deals with messages coming from the core over our secure connection
      * @param data
      */
-    routeMessage: function (data) {
+    routeMessage: function(data) {
         var msg = messages.unwrap(data);
         if (!msg) {
-            logger.error("routeMessage got a NULL coap message ", { coreID: this.getHexCoreID() });
+            logger.error("routeMessage got a NULL coap message ", {
+                coreID: this.getHexCoreID()
+            });
             return;
         }
 
@@ -383,9 +430,11 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
             this.sendReply("PingAck", msg.getId());
             return;
         }
-
+        console.log("routeMessage", msg, msg.getId())
         if (!msg || (msg.getId() != nextPeerCounter)) {
-            logger.log("got counter ", msg.getId(), " expecting ", nextPeerCounter, { coreID: this.getHexCoreID() });
+            logger.log("got counter ", msg.getId(), " expecting ", nextPeerCounter, {
+                coreID: this.getHexCoreID()
+            });
 
             if (msg._type == "Ignored") {
                 //don't ignore an ignore...
@@ -401,7 +450,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         this.emit(('msg_' + msg._type).toLowerCase(), msg);
     },
 
-    sendReply: function (name, id, data, token, onError, requester) {
+    sendReply: function(name, id, data, token, onError, requester) {
         if (!this._checkOwner(requester, onError, name)) {
             return;
         }
@@ -417,7 +466,9 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
 
         var msg = messages.wrap(name, id, null, data, token, null);
         if (!this.secureOut) {
-            logger.error("SparkCore - sendReply before READY", { coreID: this.getHexCoreID() });
+            logger.error("SparkCore - sendReply before READY", {
+                coreID: this.getHexCoreID()
+            });
             return;
         }
         this.secureOut.write(msg, null, null);
@@ -425,7 +476,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
     },
 
 
-    sendMessage: function (name, params, data, onResponse, onError, requester) {
+    sendMessage: function(name, params, data, onResponse, onError, requester) {
         if (!this._checkOwner(requester, onError, name)) {
             return false;
         }
@@ -439,12 +490,14 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
 
         var msg = messages.wrap(name, id, params, data, token, onError);
         if (!this.secureOut) {
-            logger.error("SparkCore - sendMessage before READY", { coreID: this.getHexCoreID() });
+            logger.error("SparkCore - sendMessage before READY", {
+                coreID: this.getHexCoreID()
+            });
             return;
         }
         this.secureOut.write(msg, null, null);
-//        logger.log("Sent message of type: ", name, " containing ", data,
-//            "BYTES: " + msg.toString('hex'));
+        //        logger.log("Sent message of type: ", name, " containing ", data,
+        //            "BYTES: " + msg.toString('hex'));
 
         return token;
     },
@@ -455,7 +508,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * Somewhat rare / special case, so this seems like a better option at the moment, should converge these
      * back at some point
      */
-    sendNONTypeMessage: function (name, params, data, onResponse, onError, requester) {
+    sendNONTypeMessage: function(name, params, data, onResponse, onError, requester) {
         if (!this._checkOwner(requester, onError, name)) {
             return;
         }
@@ -464,7 +517,9 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         var id = this.getIncrSendCounter();
         var msg = messages.wrap(name, id, params, data, null, onError);
         if (!this.secureOut) {
-            logger.error("SparkCore - sendMessage before READY", { coreID: this.getHexCoreID() });
+            logger.error("SparkCore - sendMessage before READY", {
+                coreID: this.getHexCoreID()
+            });
             return;
         }
         this.secureOut.write(msg, null, null);
@@ -474,7 +529,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
     },
 
 
-    parseMessage: function (data) {
+    parseMessage: function(data) {
         //we're assuming data is a serialized CoAP message
         return messages.unwrap(data);
     },
@@ -487,7 +542,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * @param callback what we should call when we're done
      * @param [once] whether or not we should keep the listener after we've had a match
      */
-    listenFor: function (name, uri, token, callback, once) {
+    listenFor: function(name, uri, token, callback, once) {
         var tokenHex = (token) ? utilities.toHexString(token) : null;
         var beVerbose = settings.showVerboseCoreLogs;
 
@@ -496,18 +551,22 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         //adds a one time event
         var that = this,
             evtName = ('msg_' + name).toLowerCase(),
-            handler = function (msg) {
+            handler = function(msg) {
 
                 if (uri && (msg.getUriPath().indexOf(uri) != 0)) {
                     if (beVerbose) {
-                        logger.log("uri filter did not match", uri, msg.getUriPath(), { coreID: that.getHexCoreID() });
+                        logger.log("uri filter did not match", uri, msg.getUriPath(), {
+                            coreID: that.getHexCoreID()
+                        });
                     }
                     return;
                 }
 
                 if (tokenHex && (tokenHex != msg.getTokenString())) {
                     if (beVerbose) {
-                        logger.log("Tokens did not match ", tokenHex, msg.getTokenString(), { coreID: that.getHexCoreID() });
+                        logger.log("Tokens did not match ", tokenHex, msg.getTokenString(), {
+                            coreID: that.getHexCoreID()
+                        });
                     }
                     return;
                 }
@@ -516,15 +575,18 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                     that.removeListener(evtName, handler);
                 }
 
-                process.nextTick(function () {
+                process.nextTick(function() {
                     try {
                         if (beVerbose) {
-                            logger.log('heard ', name, { coreID: that.coreID });
+                            logger.log('heard ', name, {
+                                coreID: that.coreID
+                            });
                         }
                         callback(msg);
-                    }
-                    catch (ex) {
-                        logger.error("listenFor - caught error: ", ex, ex.stack, { coreID: that.getHexCoreID() });
+                    } catch (ex) {
+                        logger.error("listenFor - caught error: ", ex, ex.stack, {
+                            coreID: that.getHexCoreID()
+                        });
                     }
                 });
             };
@@ -539,7 +601,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * Gets or wraps
      * @returns {null}
      */
-    getIncrSendCounter: function () {
+    getIncrSendCounter: function() {
         this.sendCounter++;
 
         if (this.sendCounter >= SparkCore.COUNTER_MAX) {
@@ -553,7 +615,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
     /**
      * increments or wraps our token value, and makes sure it isn't in use
      */
-    getNextToken: function () {
+    getNextToken: function() {
         this.sendToken++;
         if (this.sendToken >= SparkCore.TOKEN_MAX) {
             this.sendToken = 0;
@@ -570,7 +632,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * @param name
      * @param token
      */
-    useToken: function (name, token) {
+    useToken: function(name, token) {
         var key = utilities.toHexString(token);
         this._tokens[key] = name;
     },
@@ -579,7 +641,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * Clears the association with a particular token
      * @param token
      */
-    clearToken: function (token) {
+    clearToken: function(token) {
         var key = utilities.toHexString(token);
 
         if (this._tokens[key]) {
@@ -587,7 +649,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         }
     },
 
-    getResponseType: function (tokenStr) {
+    getResponseType: function(tokenStr) {
         var request = this._tokens[tokenStr];
         //logger.log('respType for key ', tokenStr, ' is ', request);
 
@@ -605,15 +667,17 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * @param type
      * @param callback - expects (value, buf, err)
      */
-    getVariable: function (name, type, callback) {
+    getVariable: function(name, type, callback) {
         var that = this;
-        var performRequest = function () {
+        var performRequest = function() {
             if (!that.HasSparkVariable(name)) {
                 callback(null, null, "Variable not found");
                 return;
             }
 
-            var token = this.sendMessage("VariableRequest", { name: name });
+            var token = this.sendMessage("VariableRequest", {
+                name: name
+            });
             var varTransformer = this.transformVariableGenerator(name, callback);
             this.listenFor("VariableValue", null, token, varTransformer, true);
         }.bind(this);
@@ -621,33 +685,38 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         if (this.hasFnState()) {
             //slight short-circuit, saves ~5 seconds every 100,000 requests...
             performRequest();
-        }
-        else {
+        } else {
             when(this.ensureWeHaveIntrospectionData())
                 .then(
                     performRequest,
-                    function (err) { callback(null, null, "Problem requesting variable: " + err);
-                });
+                    function(err) {
+                        callback(null, null, "Problem requesting variable: " + err);
+                    });
         }
     },
 
-    setVariable: function (name, data, callback) {
+    setVariable: function(name, data, callback) {
 
         /*TODO: data type! */
         var payload = messages.ToBinary(data);
-        var token = this.sendMessage("VariableRequest", { name: name }, payload);
+        var token = this.sendMessage("VariableRequest", {
+            name: name
+        }, payload);
 
         //are we expecting a response?
         //watches the messages coming back in, listens for a message of this type with
         this.listenFor("VariableValue", null, token, callback, true);
     },
 
-    callFunction: function (name, args, callback) {
+    callFunction: function(name, args, callback) {
         var that = this;
         when(this.transformArguments(name, args)).then(
-            function (buf) {
+            function(buf) {
                 if (settings.showVerboseCoreLogs) {
-                    logger.log('sending function call to the core', { coreID: that.coreID, name: name });
+                    logger.log('sending function call to the core', {
+                        coreID: that.coreID,
+                        name: name
+                    });
                 }
 
                 var writeUrl = function(msg) {
@@ -658,7 +727,11 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                     return msg;
                 };
 
-                var token = that.sendMessage("FunctionCall", { name: name, args: buf, _writeCoapUri: writeUrl }, null);
+                var token = that.sendMessage("FunctionCall", {
+                    name: name,
+                    args: buf,
+                    _writeCoapUri: writeUrl
+                }, null);
 
                 //gives us a function that will transform the response, and call the callback with it.
                 var resultTransformer = that.transformFunctionResultGenerator(name, callback);
@@ -666,8 +739,10 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                 //watches the messages coming back in, listens for a message of this type with
                 that.listenFor("FunctionReturn", null, token, resultTransformer, true);
             },
-            function (err) {
-                callback({Error: "Something went wrong calling this function: " + err});
+            function(err) {
+                callback({
+                    Error: "Something went wrong calling this function: " + err
+                });
             }
         );
     },
@@ -677,15 +752,19 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * @param showSignal - whether it should show the signal or not
      * @param callback - what to call when we're done or timed out...
      */
-    raiseYourHand: function (showSignal, callback) {
-        var timer = setTimeout(function () { callback(false); }, 30 * 1000);
+    raiseYourHand: function(showSignal, callback) {
+        var timer = setTimeout(function() {
+            callback(false);
+        }, 30 * 1000);
 
         //TODO: that.stopListeningFor("RaiseYourHandReturn", listenHandler);
         //TODO:  var listenHandler = this.listenFor("RaiseYourHandReturn",  ... );
 
         //logger.log("RaiseYourHand: asking core to signal? " + showSignal);
-        var token = this.sendMessage("RaiseYourHand", { _writeCoapUri: messages.raiseYourHandUrlGenerator(showSignal) }, null);
-        this.listenFor("RaiseYourHandReturn", null, token, function () {
+        var token = this.sendMessage("RaiseYourHand", {
+            _writeCoapUri: messages.raiseYourHandUrlGenerator(showSignal)
+        }, null);
+        this.listenFor("RaiseYourHandReturn", null, token, function() {
             clearTimeout(timer);
             callback(true);
         }, true);
@@ -693,79 +772,116 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
     },
 
 
-    flashCore: function (binary, sender) {
+    flashCore: function(binary, sender) {
         var that = this;
 
         if (!binary || (binary.length == 0)) {
-            logger.log("flash failed! - file is empty! ", { coreID: this.getHexCoreID() });
-            this.sendApiResponse(sender, { cmd: "Event", name: "Update", message: "Update failed - File was too small!" });
+            logger.log("flash failed! - file is empty! ", {
+                coreID: this.getHexCoreID()
+            });
+            this.sendApiResponse(sender, {
+                cmd: "Event",
+                name: "Update",
+                message: "Update failed - File was too small!"
+            });
             return
         }
 
         if (binary && binary.length > settings.MaxCoreBinaryBytes) {
-            logger.log("flash failed! - file is too BIG " + binary.length, { coreID: this.getHexCoreID() });
-            this.sendApiResponse(sender, { cmd: "Event", name: "Update", message: "Update failed - File was too big!" });
+            logger.log("flash failed! - file is too BIG " + binary.length, {
+                coreID: this.getHexCoreID()
+            });
+            this.sendApiResponse(sender, {
+                cmd: "Event",
+                name: "Update",
+                message: "Update failed - File was too big!"
+            });
             return;
         }
 
         var flasher = new Flasher();
         flasher.startFlashBuffer(binary, this,
-            function () {
-                logger.log("flash core finished! - sending api event", { coreID: that.getHexCoreID() });
-                that.sendApiResponse(sender, { cmd: "Event", name: "Update", message: "Update done" });
+            function() {
+                logger.log("flash core finished! - sending api event", {
+                    coreID: that.getHexCoreID()
+                });
+                that.sendApiResponse(sender, {
+                    cmd: "Event",
+                    name: "Update",
+                    message: "Update done"
+                });
             },
-            function (msg) {
-                logger.log("flash core failed! - sending api event", { coreID: that.getHexCoreID(), error: msg });
-                that.sendApiResponse(sender, { cmd: "Event", name: "Update", message: "Update failed" });
+            function(msg) {
+                logger.log("flash core failed! - sending api event", {
+                    coreID: that.getHexCoreID(),
+                    error: msg
+                });
+                that.sendApiResponse(sender, {
+                    cmd: "Event",
+                    name: "Update",
+                    message: "Update failed"
+                });
             },
-            function () {
-                logger.log("flash core started! - sending api event", { coreID: that.getHexCoreID() });
-                that.sendApiResponse(sender, { cmd: "Event", name: "Update", message: "Update started" });
+            function() {
+                logger.log("flash core started! - sending api event", {
+                    coreID: that.getHexCoreID()
+                });
+                that.sendApiResponse(sender, {
+                    cmd: "Event",
+                    name: "Update",
+                    message: "Update started"
+                });
             });
     },
 
 
-    _checkOwner: function (requester, onError, messageName) {
+    _checkOwner: function(requester, onError, messageName) {
         if (!this._owner || (this._owner == requester)) {
             return true;
-        }
-        else {
+        } else {
             //either call their callback, or log the error
             var msg = "this client has an exclusive lock";
             if (onError) {
-                process.nextTick(function () {
+                process.nextTick(function() {
                     onError(msg);
                 });
-            }
-            else {
-                logger.error(msg, { coreID: this.getHexCoreID(), cache_key: this._connection_key, msgName: messageName });
+            } else {
+                logger.error(msg, {
+                    coreID: this.getHexCoreID(),
+                    cache_key: this._connection_key,
+                    msgName: messageName
+                });
             }
 
             return false;
         }
     },
 
-    takeOwnership: function (obj, onError) {
+    takeOwnership: function(obj, onError) {
         if (this._owner) {
-            logger.error("already owned", { coreID: this.getHexCoreID() });
+            logger.error("already owned", {
+                coreID: this.getHexCoreID()
+            });
             if (onError) {
                 onError("Already owned");
             }
             return false;
-        }
-        else {
+        } else {
             //only permit 'obj' to send messages
             this._owner = obj;
             return true;
         }
     },
-    releaseOwnership: function (obj) {
-        logger.log('releasing flash ownership ', { coreID: this.getHexCoreID() });
+    releaseOwnership: function(obj) {
+        logger.log('releasing flash ownership ', {
+            coreID: this.getHexCoreID()
+        });
         if (this._owner == obj) {
             this._owner = null;
-        }
-        else if (this._owner) {
-            logger.error("cannot releaseOwnership, ", obj, " isn't the current owner ", { coreID: this.getHexCoreID() });
+        } else if (this._owner) {
+            logger.error("cannot releaseOwnership, ", obj, " isn't the current owner ", {
+                coreID: this.getHexCoreID()
+            });
         }
     },
 
@@ -777,22 +893,21 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * @param args
      * @returns {*}
      */
-    transformArguments: function (name, args) {
+    transformArguments: function(name, args) {
         var ready = when.defer();
         var that = this;
 
         when(this.ensureWeHaveIntrospectionData()).then(
-            function () {
+            function() {
                 var buf = that._transformArguments(name, args);
                 if (buf) {
                     ready.resolve(buf);
-                }
-                else {
+                } else {
                     //NOTE! The API looks for "Unknown Function" in the error response.
                     ready.reject("Unknown Function: " + name);
                 }
             },
-            function (msg) {
+            function(msg) {
                 ready.reject(msg);
             }
         );
@@ -801,9 +916,9 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
     },
 
 
-    transformFunctionResultGenerator: function (name, callback) {
+    transformFunctionResultGenerator: function(name, callback) {
         var that = this;
-        return function (msg) {
+        return function(msg) {
             that.transformFunctionResult(name, msg, callback);
         };
     },
@@ -814,9 +929,9 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * @param callback -- callback expects (value, buf, err)
      * @returns {Function}
      */
-    transformVariableGenerator: function (name, callback) {
+    transformVariableGenerator: function(name, callback) {
         var that = this;
-        return function (msg) {
+        return function(msg) {
             that.transformVariableResult(name, msg, callback);
         };
     },
@@ -829,29 +944,28 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * @param callback-- callback expects (value, buf, err)
      * @returns {null}
      */
-    transformVariableResult: function (name, msg, callback) {
+    transformVariableResult: function(name, msg, callback) {
 
         //grab the variable type, if the core doesn't say, assume it's a "string"
         var fnState = (this.coreFnState) ? this.coreFnState.v : null;
         var varType = (fnState && fnState[name]) ? fnState[name] : "string";
 
-        var niceResult = null, data = null;
+        var niceResult = null,
+            data = null;
         try {
             if (msg && msg.getPayload) {
                 //leaving raw payload in response message for now, so we don't shock our users.
                 data = msg.getPayload();
                 niceResult = messages.FromBinary(data, varType);
             }
-        }
-        catch (ex) {
+        } catch (ex) {
             logger.error("transformVariableResult - error transforming response " + ex);
         }
 
-        process.nextTick(function () {
+        process.nextTick(function() {
             try {
                 callback(niceResult, data);
-            }
-            catch (ex) {
+            } catch (ex) {
                 logger.error("transformVariableResult - error in callback " + ex);
             }
         });
@@ -867,8 +981,8 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * @param callback
      * @returns {null}
      */
-    transformFunctionResult: function (name, msg, callback) {
-        var varType = "int32";     //if the core doesn't specify, assume it's a "uint32"
+    transformFunctionResult: function(name, msg, callback) {
+        var varType = "int32"; //if the core doesn't specify, assume it's a "uint32"
         //var fnState = (this.coreFnState) ? this.coreFnState.f : null;
         //if (fnState && fnState[name] && fnState[name].returns) {
         //    varType = fnState[name].returns;
@@ -879,16 +993,14 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
             if (msg && msg.getPayload) {
                 niceResult = messages.FromBinary(msg.getPayload(), varType);
             }
-        }
-        catch (ex) {
+        } catch (ex) {
             logger.error("transformFunctionResult - error transforming response " + ex);
         }
 
-        process.nextTick(function () {
+        process.nextTick(function() {
             try {
                 callback(niceResult);
-            }
-            catch (ex) {
+            } catch (ex) {
                 logger.error("transformFunctionResult - error in callback " + ex);
             }
         });
@@ -902,14 +1014,16 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * @param args
      * @private
      */
-    _transformArguments: function (name, args) {
+    _transformArguments: function(name, args) {
         //logger.log('transform args', { coreID: this.getHexCoreID() });
         if (!args) {
             return null;
         }
 
         if (!this.hasFnState()) {
-            logger.error("_transformArguments called without any function state!", { coreID: this.getHexCoreID() });
+            logger.error("_transformArguments called without any function state!", {
+                coreID: this.getHexCoreID()
+            });
             return null;
         }
 
@@ -925,7 +1039,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                 fn = {
                     returns: "int",
                     args: [
-                        [null, "string" ]
+                        [null, "string"]
                     ]
                 };
             }
@@ -945,7 +1059,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * listens for it, and resolves our deferred on success
      * @returns {*}
      */
-    ensureWeHaveIntrospectionData: function () {
+    ensureWeHaveIntrospectionData: function() {
         if (this.hasFnState()) {
             return when.resolve();
         }
@@ -972,8 +1086,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         if (this._describeDfd) {
             if (loaded) {
                 this._describeDfd.resolve();
-            }
-            else {
+            } else {
                 this._describeDfd.reject("something went wrong parsing function state")
             }
         }
@@ -1032,13 +1145,13 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
 
 
             //TODO:
-//            //if the message is "cc3000-radio-version", save to the core_state collection for this core?
+            //            //if the message is "cc3000-radio-version", save to the core_state collection for this core?
             if (lowername == "spark/cc3000-patch-version") {
-//                set_cc3000_version(this.coreID, obj.data);
-//                eat_message = false;
-            } else if(lowername == "spark/device/claim/code") {
+                //                set_cc3000_version(this.coreID, obj.data);
+                //                eat_message = false;
+            } else if (lowername == "spark/device/claim/code") {
                 // if the message is "spark/device/claim/code", save the claim_code to this code, and waiting for user claim
-                model.saveClaimCode(this.getHexCoreID(), msg.getPayload().toString()).then(function( result ) {}, function( err ) {
+                model.saveClaimCode(this.getHexCoreID(), msg.getPayload().toString()).then(function(result) {}, function(err) {
                     logger.log("Save Claim Code error: ", err);
                 });
             }
@@ -1055,16 +1168,14 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
             if (!global.publisher) {
                 return;
             }
-            
+
             if (!global.publisher.publish(isPublic, obj.name, obj.userid, obj.data, obj.ttl, obj.published_at, this.getHexCoreID())) {
                 //this core is over its limit, and that message was not sent.
                 this.sendReply("EventSlowdown", msg.getId());
-            }
-            else {
+            } else {
                 this.sendReply("EventAck", msg.getId());
             }
-        }
-        catch (ex) {
+        } catch (ex) {
             logger.error("onCoreSentEvent: failed writing to socket - " + ex);
         }
     },
@@ -1116,10 +1227,10 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         //this.eventsSocket.subscribe(isPublic, name, userid);
     },
 
-    onCorePubHeard: function (name, data, ttl, published_at, coreid) {
+    onCorePubHeard: function(name, data, ttl, published_at, coreid) {
         this.sendCoreEvent(true, name, data, ttl, published_at, coreid);
     },
-    onCorePrivHeard: function (name, data, ttl, published_at, coreid) {
+    onCorePrivHeard: function(name, data, ttl, published_at, coreid) {
         this.sendCoreEvent(false, name, data, ttl, published_at, coreid);
     },
 
@@ -1131,15 +1242,14 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * @param ttl
      * @param published_at
      */
-    sendCoreEvent: function (isPublic, name, data, ttl, published_at, coreid) {
-        var rawFn = function (msg) {
+    sendCoreEvent: function(isPublic, name, data, ttl, published_at, coreid) {
+        var rawFn = function(msg) {
             try {
                 msg.setMaxAge(parseInt((ttl && (ttl >= 0)) ? ttl : 60));
                 if (published_at) {
                     msg.setTimestamp(moment(published_at).toDate());
                 }
-            }
-            catch (ex) {
+            } catch (ex) {
                 logger.error("onCoreHeard - " + ex);
             }
             return msg;
@@ -1153,64 +1263,67 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         }
 
         data = (data) ? data.toString() : data;
-        this.sendNONTypeMessage(msgName, { event_name: name, _raw: rawFn }, data);
+        this.sendNONTypeMessage(msgName, {
+            event_name: name,
+            _raw: rawFn
+        }, data);
     },
 
-//    _wifiScan: null,
-//    handleFindMe: function (data) {
-//        if (!this._wifiScan) {
-//            this._wifiScan = [];
-//        }
-//
-//        if (!data || (data.indexOf("00:00:00:00:00:00") >= 0)) {
-//            this.requestLocation(this._wifiScan);
-//            this._wifiScan = [];
-//        }
-//
-//        try {
-//            this._wifiScan.push(JSON.parse(data));
-//        }
-//        catch(ex) {}
-//    },
-//
-//    requestLocation: function (arr) {
-//
-//        logger.log("Making geolocation request");
-//        var that = this;
-//        request({
-//            uri:  "https://location.services.mozilla.com/v1/search?key=0010230303020102030223",
-//            method: "POST",
-//            body: JSON.stringify({
-//                "wifi": arr
-//            }),
-//            'content-type': 'application/json',
-//            json: true
-//        },
-//            function (error, response, body) {
-//            if (error) {
-//                logger.log("geolocation Error! ", error);
-//            }
-//            else {
-//                logger.log("geolocation success! ", body);
-//                that.sendCoreEvent(false, "Spark/Location", body, 60, new Date(), that.getHexCoreID());
-//            }
-//        });
-//    },
+    //    _wifiScan: null,
+    //    handleFindMe: function (data) {
+    //        if (!this._wifiScan) {
+    //            this._wifiScan = [];
+    //        }
+    //
+    //        if (!data || (data.indexOf("00:00:00:00:00:00") >= 0)) {
+    //            this.requestLocation(this._wifiScan);
+    //            this._wifiScan = [];
+    //        }
+    //
+    //        try {
+    //            this._wifiScan.push(JSON.parse(data));
+    //        }
+    //        catch(ex) {}
+    //    },
+    //
+    //    requestLocation: function (arr) {
+    //
+    //        logger.log("Making geolocation request");
+    //        var that = this;
+    //        request({
+    //            uri:  "https://location.services.mozilla.com/v1/search?key=0010230303020102030223",
+    //            method: "POST",
+    //            body: JSON.stringify({
+    //                "wifi": arr
+    //            }),
+    //            'content-type': 'application/json',
+    //            json: true
+    //        },
+    //            function (error, response, body) {
+    //            if (error) {
+    //                logger.log("geolocation Error! ", error);
+    //            }
+    //            else {
+    //                logger.log("geolocation success! ", body);
+    //                that.sendCoreEvent(false, "Spark/Location", body, 60, new Date(), that.getHexCoreID());
+    //            }
+    //        });
+    //    },
 
 
-    hasFnState: function () {
+    hasFnState: function() {
         return !!this.coreFnState;
     },
 
-    HasSparkVariable: function (name) {
+    HasSparkVariable: function(name) {
         return (this.coreFnState && this.coreFnState.v && this.coreFnState.v[name]);
     },
 
-    HasSparkFunction: function (name) {
+    HasSparkFunction: function(name) {
         //has state, and... the function is an object, or it's in the function array
         return (this.coreFnState &&
-            (this.coreFnState[name] || ( this.coreFnState.f && utilities.arrayContainsLower(this.coreFnState.f, name)))
-            );
+            (this.coreFnState[name] || (this.coreFnState.f && utilities.arrayContainsLower(this.coreFnState.f, name)))
+        );
     },
 
     /**
@@ -1219,7 +1332,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      * on the core.
      * @param data
      */
-    loadFnState: function (data) {
+    loadFnState: function(data) {
         var fnState = JSON.parse(data.toString());
 
         if (fnState && fnState.v) {
@@ -1232,53 +1345,53 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         //logger.log("got describe return ", this.coreFnState, { coreID: this.getHexCoreID() });
 
         //an example:
-//        this.coreFnState = {
-//            "HelloWorld": {
-//                returns: "string",
-//                args: [
-//                    ["name", "string"],
-//                    ["adjective", "string"]
-//                ]}
-//        };
+        //        this.coreFnState = {
+        //            "HelloWorld": {
+        //                returns: "string",
+        //                args: [
+        //                    ["name", "string"],
+        //                    ["adjective", "string"]
+        //                ]}
+        //        };
         return true;
     },
 
-    getHexCoreID: function () {
+    getHexCoreID: function() {
         return (this.coreID) ? this.coreID.toString('hex') : "unknown";
     },
 
-    getRemoteIPAddress: function () {
+    getRemoteIPAddress: function() {
         return (this.socket && this.socket.remoteAddress) ? this.socket.remoteAddress.toString() : "unknown";
     },
 
-//    _idleTimer: null,
-//    _lastMessageTime: null,
-//
-//    idleChecker: function() {
-//        if (!this.socket) {
-//            //disconnected
-//            return;
-//        }
-//
-//        clearTimeout(this._idleTimer);
-//        this._idleTimer = setTimeout(this.idleChecker.bind(this), 30000);
-//
-//        if (!this._lastMessageTime) {
-//            this._lastMessageTime = new Date();
-//        }
-//
-//        var elapsed = ((new Date()) - this._lastMessageTime) / 1000;
-//        if (elapsed > 30) {
-//            //we don't expect a response, but by trying to send anything, the socket should blow up if disconnected.
-//            logger.log("Socket seems quiet, checking...", { coreID: this.getHexCoreID(), elapsed: elapsed,  cache_key: this._connection_key });
-//            this.sendMessage("SocketPing");
-//            this._lastMessageTime = new Date(); //don't check for another 30 seconds.
-//        }
-//    },
+    //    _idleTimer: null,
+    //    _lastMessageTime: null,
+    //
+    //    idleChecker: function() {
+    //        if (!this.socket) {
+    //            //disconnected
+    //            return;
+    //        }
+    //
+    //        clearTimeout(this._idleTimer);
+    //        this._idleTimer = setTimeout(this.idleChecker.bind(this), 30000);
+    //
+    //        if (!this._lastMessageTime) {
+    //            this._lastMessageTime = new Date();
+    //        }
+    //
+    //        var elapsed = ((new Date()) - this._lastMessageTime) / 1000;
+    //        if (elapsed > 30) {
+    //            //we don't expect a response, but by trying to send anything, the socket should blow up if disconnected.
+    //            logger.log("Socket seems quiet, checking...", { coreID: this.getHexCoreID(), elapsed: elapsed,  cache_key: this._connection_key });
+    //            this.sendMessage("SocketPing");
+    //            this._lastMessageTime = new Date(); //don't check for another 30 seconds.
+    //        }
+    //    },
 
 
     _disconnectCtr: 0,
-    disconnect: function (msg) {
+    disconnect: function(msg) {
         msg = msg || "";
         this._disconnectCtr++;
 
@@ -1288,15 +1401,17 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         }
 
         try {
-            var logInfo = { coreID: this.getHexCoreID(), cache_key: this._connection_key };
+            var logInfo = {
+                coreID: this.getHexCoreID(),
+                cache_key: this._connection_key
+            };
             if (this._connStartTime) {
                 var delta = ((new Date()) - this._connStartTime) / 1000.0;
                 logInfo['duration'] = delta;
             }
 
             logger.log(this._disconnectCtr + ": Core disconnected: " + msg, logInfo);
-        }
-        catch (ex) {
+        } catch (ex) {
             logger.error("Disconnect log error " + ex);
         }
 
@@ -1306,8 +1421,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                 this.socket.destroy();
                 this.socket = null;
             }
-        }
-        catch (ex) {
+        } catch (ex) {
             logger.error("Disconnect TCPSocket error: " + ex);
         }
 
@@ -1315,8 +1429,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
             try {
                 this.secureIn.end();
                 this.secureIn = null;
-            }
-            catch(ex) {
+            } catch (ex) {
                 logger.error("Error cleaning up secureIn ", ex);
             }
         }
@@ -1324,13 +1437,12 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
             try {
                 this.secureOut.end();
                 this.secureOut = null;
-            }
-            catch(ex) {
+            } catch (ex) {
                 logger.error("Error cleaning up secureOut ", ex);
             }
         }
 
-//        clearTimeout(this._idleTimer);
+        //        clearTimeout(this._idleTimer);
 
         this.emit('disconnect', msg);
 
@@ -1338,8 +1450,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         //obv, don't do this before emitting disconnect.
         try {
             this.removeAllListeners();
-        }
-        catch(ex) {
+        } catch (ex) {
             logger.error("Problem removing listeners ", ex);
         }
     }

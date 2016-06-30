@@ -1,19 +1,19 @@
 /*
-*   Copyright (c) 2015 Particle Industries, Inc.  All rights reserved.
-*
-*   This program is free software; you can redistribute it and/or
-*   modify it under the terms of the GNU Lesser General Public
-*   License as published by the Free Software Foundation, either
-*   version 3 of the License, or (at your option) any later version.
-*
-*   This program is distributed in the hope that it will be useful,
-*   but WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*   Lesser General Public License for more details.
-*
-*   You should have received a copy of the GNU Lesser General Public
-*   License along with this program; if not, see <http://www.gnu.org/licenses/>.
-*/
+ *   Copyright (c) 2015 Particle Industries, Inc.  All rights reserved.
+ *
+ *   This program is free software; you can redistribute it and/or
+ *   modify it under the terms of the GNU Lesser General Public
+ *   License as published by the Free Software Foundation, either
+ *   version 3 of the License, or (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *   Lesser General Public License for more details.
+ *
+ *   You should have received a copy of the GNU Lesser General Public
+ *   License along with this program; if not, see <http://www.gnu.org/licenses/>.
+ */
 
 var settings = require('../settings.js');
 var CryptoLib = require('../lib/ICrypto.js');
@@ -32,7 +32,7 @@ var fs = require('fs');
 var moment = require('moment');
 
 
-var DeviceServer = function (options) {
+var DeviceServer = function(options) {
     this.options = options;
     this.options = options || {};
     settings.coreKeysDir = this.options.coreKeysDir = this.options.coreKeysDir || settings.coreKeysDir;
@@ -46,44 +46,46 @@ var DeviceServer = function (options) {
 
 DeviceServer.prototype = {
 
-    init: function () {
+    init: function() {
         this.loadCoreData();
     },
 
     addCoreKey: function(coreid, public_key) {
-        model.saveCoreKey({core_id: coreid, public_key: public_key});
+        model.saveCoreKey({
+            core_id: coreid,
+            public_key: public_key
+        });
         return false;
     },
 
-    saveCoreData: function (coreid) {
+    saveCoreData: function(coreid) {
         var defer = when.defer();
         try {
             var attribs = memo._attribsByID[coreid];
             var that = this;
-            
-            model.saveCore(attribs).then(function(result){
+
+            model.saveCore(attribs).then(function(result) {
                 that.loadCore(coreid);
                 defer.resolve();
-            }, function (err) {
-                if( err.code && err.code == "ER_DUP_ENTRY" ) {
+            }, function(err) {
+                if (err.code && err.code == "ER_DUP_ENTRY") {
                     logger.log("coreid already exist.");
                 } else {
                     logger.error("Save core error: ", err);
                 }
                 defer.reject();
             });
-        }
-        catch (ex) {
+        } catch (ex) {
             logger.error("Error saving core data ", ex);
         }
-        
+
         return defer.promise;
     },
 
-    loadCoreData: function () {
+    loadCoreData: function() {
         var attribsByID = {};
 
-        model.allCore().then(function(result){
+        model.allCore().then(function(result) {
             for (var i in result) {
                 var core = result[i];
                 core.coreID = core.core_id;
@@ -91,7 +93,7 @@ DeviceServer.prototype = {
                 memo._allIDs[core.coreID] = true;
             }
             memo._attribsByID = attribsByID;
-        }, function(err){
+        }, function(err) {
             logger.error("Get AllCore Error: ", err);
         });
     },
@@ -105,16 +107,16 @@ DeviceServer.prototype = {
         });
     },
 
-    getCore: function (coreid) {
+    getCore: function(coreid) {
         return memo._allCoresByID[coreid];
     },
 
-    getCoreAttributes: function (coreid) {
+    getCoreAttributes: function(coreid) {
         memo._attribsByID[coreid] = memo._attribsByID[coreid] || {};
         return memo._attribsByID[coreid];
     },
 
-    setCoreAttribute: function (coreid, name, value) {
+    setCoreAttribute: function(coreid, name, value) {
         memo.setAttribute(coreid, name, value);
         this.saveCoreData(coreid);
         return true;
@@ -122,13 +124,13 @@ DeviceServer.prototype = {
 
     setCoreAttributes: function(coreid, objects, callback) {
         memo.setAttributes(coreid, objects);
-        this.saveCoreData(coreid).then(function(){
-            if(callback) callback();
+        this.saveCoreData(coreid).then(function() {
+            if (callback) callback();
         });
         return;
     },
 
-    getCoreByName: function (name) {
+    getCoreByName: function(name) {
         //var cores = this._allCoresByID;
         var cores = memo._attribsByID;
         for (var coreid in cores) {
@@ -144,7 +146,7 @@ DeviceServer.prototype = {
      * return all the cores we know exist
      * @returns {null}
      */
-    getAllCoreIDs: function () {
+    getAllCoreIDs: function() {
         return memo._allIDs;
     },
 
@@ -152,7 +154,7 @@ DeviceServer.prototype = {
      * return all the cores that are connected
      * @returns {null}
      */
-    getAllCores: function () {
+    getAllCores: function() {
         return memo._allCoresByID;
     },
 
@@ -163,13 +165,13 @@ DeviceServer.prototype = {
     compareClaimCode: function(coreid, claim_code) {
         var defer = when.defer();
 
-        model.findCoreKey(coreid).then(function (result) {
+        model.findCoreKey(coreid).then(function(result) {
             if (result.length > 0 && result[0].claim_code == claim_code) {
                 defer.resolve();
             } else {
                 defer.reject("fail");
             }
-        }, function (err) {
+        }, function(err) {
             defer.reject({
                 error: err
             });
@@ -179,13 +181,13 @@ DeviceServer.prototype = {
     },
 
 
-//id: core.coreID,
-//name: core.name || null,
-//last_app: core.last_flashed_app_name || null,
-//last_heard: null
+    //id: core.coreID,
+    //name: core.name || null,
+    //last_app: core.last_flashed_app_name || null,
+    //last_heard: null
 
 
-    start: function () {
+    start: function() {
         global.settings = settings;
 
         //
@@ -195,8 +197,8 @@ DeviceServer.prototype = {
         var that = this,
             connId = 0,
             _cores = {},
-            server = net.createServer(function (socket) {
-                process.nextTick(function () {
+            server = net.createServer(function(socket) {
+                process.nextTick(function() {
                     try {
                         var key = "_" + connId++;
                         logger.log("Connection from: " + socket.remoteAddress + ", connId: " + connId);
@@ -210,7 +212,7 @@ DeviceServer.prototype = {
 
 
                         _cores[key] = core;
-                        core.on('ready', function () {
+                        core.on('ready', function() {
                             var coreid = this.getHexCoreID();
                             logger.log("Core " + coreid + " online!");
                             memo._allCoresByID[coreid] = core;
@@ -223,12 +225,12 @@ DeviceServer.prototype = {
                                 group_id: 0
                             };
 
-                            if(memo._attribsByID[coreid].firmware_version == null
-                            || memo._attribsByID[coreid].firmware_version == "") {
+                            if (memo._attribsByID[coreid].firmware_version == null ||
+                                memo._attribsByID[coreid].firmware_version == "") {
                                 that.setCoreAttribute(coreid, "firmware_version", this.product_firmware_version);
                             }
 
-                            if(global.publisher) {
+                            if (global.publisher) {
                                 global.publisher.publish(
                                     true,
                                     "spark/status",
@@ -240,13 +242,15 @@ DeviceServer.prototype = {
                                 );
                             }
                         });
-                        core.on('disconnect', function (msg) {
+                        core.on('disconnect', function(msg) {
                             var coreid = this.getHexCoreID();
                             logger.log("Core offline:" + coreid);
                             //logger.log("Session ended for " + core._connection_key);
                             delete _cores[key];
+                            delete memo._allCoresByID[coreid];
+                            delete memo._attribsByID[coreid];
 
-                            if(global.publisher) {
+                            if (global.publisher) {
                                 global.publisher.publish(
                                     true,
                                     "spark/status",
@@ -258,8 +262,7 @@ DeviceServer.prototype = {
                                 );
                             }
                         });
-                    }
-                    catch (ex) {
+                    } catch (ex) {
                         logger.error("core startup failed " + ex);
                     }
                 });
@@ -268,7 +271,7 @@ DeviceServer.prototype = {
         global.cores = _cores;
         global.publisher = new EventPublisher();
 
-        server.on('error', function () {
+        server.on('error', function() {
             logger.error("something blew up ", arguments);
         });
 
@@ -305,8 +308,11 @@ DeviceServer.prototype = {
         //
         //  Wait for the keys to be ready, then start accepting connections
         //
-        server.listen(settings.PORT, function () {
-            logger.log("SOAP started", { host: settings.HOST, port: settings.PORT });
+        server.listen(settings.PORT, function() {
+            logger.log("SOAP started", {
+                host: settings.HOST,
+                port: settings.PORT
+            });
         });
 
 
