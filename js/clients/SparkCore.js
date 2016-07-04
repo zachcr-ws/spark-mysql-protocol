@@ -114,7 +114,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         });
         this.socket.on('close', function(err) {
             console.log("socket close:", err);
-            that.disconnect("socket close " + err);
+            err ? that.disconnect("socket close " + err) : "";
         });
         this.socket.on('timeout', function(err) {
             that.disconnect("socket timeout " + err);
