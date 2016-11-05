@@ -127,7 +127,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                 that.disconnect("socket timeout.");
             }, 2000);
 
-            that.listenFor(coreID, {
+            that.PingPong(coreID, {
                 cmd: "Pong"
             }, function(sender, msg) {
                 console.log(sender, msg);
@@ -558,6 +558,36 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
     parseMessage: function(data) {
         //we're assuming data is a serialized CoAP message
         return messages.unwrap(data);
+    },
+
+    PingPong: function(coreID, filter, callback, once) {
+
+        var EvtName = "pingpng_" + coreID;
+
+        var that = this,
+            handler = function(sender, msg) {
+                //logger.log('heard from ' + ((sender) ? sender.toString() : '(UNKNOWN)'));
+
+                if (!utilities.leftHasRightFilter(msg, filter)) {
+                    //logger.log('filters did not match');
+                    return;
+                }
+
+                if (once) {
+                    that.removeListener(EvtName, handler);
+                }
+
+                process.nextTick(function() {
+                    try {
+                        //logger.log('passing message to callback ', msg);
+                        callback(sender, msg);
+                    } catch (ex) {
+                        logger.error("listenFor error: " + ex, (ex) ? ex.stack : '');
+                    }
+                });
+            };
+
+        this.on(EvtName, handler);
     },
 
     /**
