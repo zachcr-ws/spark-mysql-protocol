@@ -1,22 +1,22 @@
 /*
-*   Copyright (C) 2013-2014 Spark Labs, Inc. All rights reserved. -  https://www.spark.io/
-*
-*   This file is part of the Spark-protocol module
-*
-*   This program is free software: you can redistribute it and/or modify
-*   it under the terms of the GNU General Public License version 3
-*   as published by the Free Software Foundation.
-*
-*   Spark-protocol is distributed in the hope that it will be useful,
-*   but WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU General Public License for more details.
-*
-*   You should have received a copy of the GNU General Public License
-*   along with Spark-protocol.  If not, see <http://www.gnu.org/licenses/>.
-*
-*   You can download the source here: https://github.com/spark/spark-protocol
-*/
+ *   Copyright (C) 2013-2014 Spark Labs, Inc. All rights reserved. -  https://www.spark.io/
+ *
+ *   This file is part of the Spark-protocol module
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License version 3
+ *   as published by the Free Software Foundation.
+ *
+ *   Spark-protocol is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with Spark-protocol.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *   You can download the source here: https://github.com/spark/spark-protocol
+ */
 
 
 var fs = require('fs');
@@ -47,47 +47,184 @@ module.exports = {
     //Core must respond as soon as possible with piggybacked Description response.
 
     Spec: {
-        "Hello": { code: Message.Code.POST, uri: "h", type: Message.Type.NON, Response: "Hello" },
-        "KeyChange": { code: Message.Code.PUT, uri: "k", type: Message.Type.CON, Response: "KeyChanged" },
-        "UpdateBegin": { code: Message.Code.POST, uri: "u", type: Message.Type.CON, Response: "UpdateReady" },
-        "Chunk": { code: Message.Code.POST, uri: "c?{{{crc}}}", type: Message.Type.CON, Response: "ChunkReceived" },
-        "ChunkMissed": { code: Message.Code.GET, uri: "c", type: Message.Type.CON, Response: "ChunkMissedAck" },
+        "Hello": {
+            code: Message.Code.POST,
+            uri: "h",
+            type: Message.Type.NON,
+            Response: "Hello"
+        },
+        "KeyChange": {
+            code: Message.Code.PUT,
+            uri: "k",
+            type: Message.Type.CON,
+            Response: "KeyChanged"
+        },
+        "UpdateBegin": {
+            code: Message.Code.POST,
+            uri: "u",
+            type: Message.Type.CON,
+            Response: "UpdateReady"
+        },
+        "Chunk": {
+            code: Message.Code.POST,
+            uri: "c?{{{crc}}}",
+            type: Message.Type.CON,
+            Response: "ChunkReceived"
+        },
+        "ChunkMissed": {
+            code: Message.Code.GET,
+            uri: "c",
+            type: Message.Type.CON,
+            Response: "ChunkMissedAck"
+        },
 
-        "UpdateDone": { code: Message.Code.PUT, uri: "u", type: Message.Type.CON, Response: null },
-        "FunctionCall": { code: Message.Code.POST, uri: "f/{{name}}?{{{args}}}", type: Message.Type.CON, Response: "FunctionReturn" },
-        "VariableRequest": { code: Message.Code.GET, uri: "v/{{name}}", type: Message.Type.CON, Response: "VariableValue" },
+        "UpdateDone": {
+            code: Message.Code.PUT,
+            uri: "u",
+            type: Message.Type.CON,
+            Response: null
+        },
+        "FunctionCall": {
+            code: Message.Code.POST,
+            uri: "f/{{name}}?{{{args}}}",
+            type: Message.Type.CON,
+            Response: "FunctionReturn"
+        },
+        "VariableRequest": {
+            code: Message.Code.GET,
+            uri: "v/{{name}}",
+            type: Message.Type.CON,
+            Response: "VariableValue"
+        },
 
-        "PrivateEvent": { code: Message.Code.POST, uri: "E/{{event_name}}", type: Message.Type.NON, Response: null },
-        "PublicEvent": { code: Message.Code.POST, uri: "e/{{event_name}}", type: Message.Type.NON, Response: null },
+        "PrivateEvent": {
+            code: Message.Code.POST,
+            uri: "E/{{event_name}}",
+            type: Message.Type.NON,
+            Response: null
+        },
+        "PublicEvent": {
+            code: Message.Code.POST,
+            uri: "e/{{event_name}}",
+            type: Message.Type.NON,
+            Response: null
+        },
 
-        "Subscribe": { code: Message.Code.GET, uri: "e/{{event_name}}", type: Message.Type.CON, Response: null },
-        "Describe": { code: Message.Code.GET, uri: "d", type: Message.Type.CON, Response: "DescribeReturn" },
-        "GetTime": { code: Message.Code.GET, uri: "t", type: Message.Type.CON, Response: "GetTimeReturn" },
-        "RaiseYourHand": { code: Message.Code.PUT, uri: "s", type: Message.Type.CON, Response: "RaiseYourHandReturn" },
+        "Subscribe": {
+            code: Message.Code.GET,
+            uri: "e/{{event_name}}",
+            type: Message.Type.CON,
+            Response: null
+        },
+        "Describe": {
+            code: Message.Code.GET,
+            uri: "d",
+            type: Message.Type.CON,
+            Response: "DescribeReturn"
+        },
+        "GetTime": {
+            code: Message.Code.GET,
+            uri: "t",
+            type: Message.Type.CON,
+            Response: "GetTimeReturn"
+        },
+        "RaiseYourHand": {
+            code: Message.Code.PUT,
+            uri: "s",
+            type: Message.Type.CON,
+            Response: "RaiseYourHandReturn"
+        },
 
 
         //  "PrivateSubscribe": { code: Message.Code.GET, uri: "E/{{event_name}}", type: Message.Type.NON, Response: null },
 
-        "EventAck": { code: Message.Code.EMPTY, uri: null, type: Message.Type.ACK, Response: null },
-        "EventSlowdown": { code: Message.Code.BAD_REQUEST, uri: null, type: Message.Type.ACK, Response: null },
+        "EventAck": {
+            code: Message.Code.EMPTY,
+            uri: null,
+            type: Message.Type.ACK,
+            Response: null
+        },
+        "EventSlowdown": {
+            code: Message.Code.BAD_REQUEST,
+            uri: null,
+            type: Message.Type.ACK,
+            Response: null
+        },
 
-        "SubscribeAck": { code: Message.Code.EMPTY, uri: null, type: Message.Type.ACK, Response: null },
-        "SubscribeFail": { code: Message.Code.BAD_REQUEST, uri: null, type: Message.Type.ACK, Response: null },
-        "GetTimeReturn": { code: Message.Code.CONTENT, type: Message.Type.ACK },
-        "RaiseYourHandReturn": { code: Message.Code.CHANGED, type: Message.Type.ACK },
-        "ChunkMissedAck": { code: Message.Code.EMPTY, type: Message.Type.ACK },
-        "DescribeReturn": { code: Message.Code.CHANGED, type: Message.Type.NON },
-        "KeyChanged": { code: Message.Code.CHANGED, type: Message.Type.NON },
-        "UpdateReady": { code: Message.Code.CHANGED, type: Message.Type.NON },
-        "ChunkReceived": { code: Message.Code.CHANGED, type: Message.Type.NON },
-        "ChunkReceivedError": { code: Message.Code.BAD_REQUEST, type: Message.Type.NON },
-        "FunctionReturn": { code: Message.Code.CHANGED, type: Message.Type.NON },
-        "FunctionReturnError": { code: Message.Code.BAD_REQUEST, type: Message.Type.NON },
-        "VariableValue": { code: Message.Code.CONTENT, type: Message.Type.ACK },
-        "VariableValueError": { code: Message.Code.BAD_REQUEST, type: Message.Type.NON },
-        "Ping": { code: Message.Code.EMPTY, type: Message.Type.CON },
-        "PingAck": { code: Message.Code.EMPTY, uri: null, type: Message.Type.ACK, Response: null },
-        "SocketPing": { code: Message.Code.EMPTY, type: Message.Type.NON }
+        "SubscribeAck": {
+            code: Message.Code.EMPTY,
+            uri: null,
+            type: Message.Type.ACK,
+            Response: null
+        },
+        "SubscribeFail": {
+            code: Message.Code.BAD_REQUEST,
+            uri: null,
+            type: Message.Type.ACK,
+            Response: null
+        },
+        "GetTimeReturn": {
+            code: Message.Code.CONTENT,
+            type: Message.Type.ACK
+        },
+        "RaiseYourHandReturn": {
+            code: Message.Code.CHANGED,
+            type: Message.Type.ACK
+        },
+        "ChunkMissedAck": {
+            code: Message.Code.EMPTY,
+            type: Message.Type.ACK
+        },
+        "DescribeReturn": {
+            code: Message.Code.CHANGED,
+            type: Message.Type.NON
+        },
+        "KeyChanged": {
+            code: Message.Code.CHANGED,
+            type: Message.Type.NON
+        },
+        "UpdateReady": {
+            code: Message.Code.CHANGED,
+            type: Message.Type.NON
+        },
+        "ChunkReceived": {
+            code: Message.Code.CHANGED,
+            type: Message.Type.NON
+        },
+        "ChunkReceivedError": {
+            code: Message.Code.BAD_REQUEST,
+            type: Message.Type.NON
+        },
+        "FunctionReturn": {
+            code: Message.Code.CHANGED,
+            type: Message.Type.NON
+        },
+        "FunctionReturnError": {
+            code: Message.Code.BAD_REQUEST,
+            type: Message.Type.NON
+        },
+        "VariableValue": {
+            code: Message.Code.CONTENT,
+            type: Message.Type.ACK
+        },
+        "VariableValueError": {
+            code: Message.Code.BAD_REQUEST,
+            type: Message.Type.NON
+        },
+        "Ping": {
+            code: Message.Code.EMPTY,
+            type: Message.Type.CON
+        },
+        "PingAck": {
+            code: Message.Code.EMPTY,
+            uri: null,
+            type: Message.Type.ACK,
+            Response: null
+        },
+        "SocketPing": {
+            code: Message.Code.EMPTY,
+            type: Message.Type.NON
+        }
     },
 
     /**
@@ -106,8 +243,8 @@ module.exports = {
      * @param showSignal
      * @returns {Function}
      */
-    raiseYourHandUrlGenerator: function (showSignal) {
-        return function (msg) {
+    raiseYourHandUrlGenerator: function(showSignal) {
+        return function(msg) {
             var b = new Buffer(1);
             b.writeUInt8(showSignal ? 1 : 0, 0);
 
@@ -118,7 +255,7 @@ module.exports = {
     },
 
 
-    getRouteKey: function (code, path) {
+    getRouteKey: function(code, path) {
         var uri = code + path;
 
         //find the slash.
@@ -131,17 +268,17 @@ module.exports = {
     },
 
 
-    getRequestType: function (msg) {
+    getRequestType: function(msg) {
         var uri = StaticClass.getRouteKey(msg.getCode(), msg.getUriPath());
         return StaticClass.Routes[uri];
     },
 
-    getResponseType: function (name) {
+    getResponseType: function(name) {
         var spec = StaticClass.Spec[name];
         return (spec) ? spec.Response : null;
     },
 
-    statusIsOkay: function (msg) {
+    statusIsOkay: function(msg) {
         return (msg.getCode() < Message.Code.BAD_REQUEST);
     },
 
@@ -154,7 +291,7 @@ module.exports = {
     //    },
 
     _started: false,
-    init: function () {
+    init: function() {
         if (StaticClass._started) {
             return;
         }
@@ -193,7 +330,7 @@ module.exports = {
      * @param onError
      * @returns {*}
      */
-    wrap: function (name, id, params, data, token, onError) {
+    wrap: function(name, id, params, data, token, onError) {
         var spec = StaticClass.Spec[name];
         if (!spec) {
             if (onError) {
@@ -211,8 +348,7 @@ module.exports = {
             // for our messages that have nitty gritty urls that require raw bytes and no strings.
             msg = params._writeCoapUri(msg);
             uri = null;
-        }
-        else if (params && spec.template) {
+        } else if (params && spec.template) {
             uri = spec.template.render(params);
         }
 
@@ -244,13 +380,12 @@ module.exports = {
         return msg.toBuffer();
     },
 
-    unwrap: function (data) {
+    unwrap: function(data) {
         try {
             if (data) {
                 return Message.fromBuffer(data);
             }
-        }
-        catch (ex) {
+        } catch (ex) {
             logger.error("Coap Error: " + ex);
         }
 
@@ -258,14 +393,14 @@ module.exports = {
     },
 
 
-//http://en.wikipedia.org/wiki/X.690
-//=== TYPES: SUBSET OF ASN.1 TAGS ===
-//
-//1: BOOLEAN (false=0, true=1)
-//2: INTEGER (int32)
-//4: OCTET STRING (arbitrary bytes)
-//5: NULL (void for return value only)
-//9: REAL (double)
+    //http://en.wikipedia.org/wiki/X.690
+    //=== TYPES: SUBSET OF ASN.1 TAGS ===
+    //
+    //1: BOOLEAN (false=0, true=1)
+    //2: INTEGER (int32)
+    //4: OCTET STRING (arbitrary bytes)
+    //5: NULL (void for return value only)
+    //9: REAL (double)
 
     /**
      * Translates the integer variable type enum to user friendly string types
@@ -273,7 +408,7 @@ module.exports = {
      * @returns {*}
      * @constructor
      */
-    TranslateIntTypes: function (varState) {
+    TranslateIntTypes: function(varState) {
         if (!varState) {
             return varState;
         }
@@ -295,7 +430,7 @@ module.exports = {
         return varState;
     },
 
-    getNameFromTypeInt: function (typeInt) {
+    getNameFromTypeInt: function(typeInt) {
         switch (typeInt) {
             case 1:
                 return "bool";
@@ -314,18 +449,17 @@ module.exports = {
         }
     },
 
-    TryFromBinary: function (buf, name) {
+    TryFromBinary: function(buf, name) {
         var result = null;
         try {
             result = StaticClass.FromBinary(buf, name);
-        }
-        catch (ex) {
+        } catch (ex) {
 
         }
         return result;
     },
 
-    FromBinary: function (buf, name) {
+    FromBinary: function(buf, name) {
 
         //logger.log('converting a ' + name + ' FromBinary input was ' + buf);
 
@@ -358,7 +492,7 @@ module.exports = {
                 v = r.shiftFloat();
                 break;
             case "double":
-                v = r.shiftDouble(true);    //doubles on the core are little-endian
+                v = r.shiftDouble(true); //doubles on the core are little-endian
                 break;
             case "buffer":
                 v = buf;
@@ -372,12 +506,12 @@ module.exports = {
         return v;
     },
 
-    ToBinary: function (val, name, b) {
+    ToBinary: function(val, name, b) {
         name = name || (typeof val);
 
-//        if ((name === "number") && (val % 1 != 0)) {
-//            name = "double";
-//        }
+        //        if ((name === "number") && (val % 1 != 0)) {
+        //            name = "double";
+        //        }
 
         b = b || new buffers.BufferBuilder();
 
@@ -390,9 +524,12 @@ module.exports = {
             case "int32":
                 b.pushInt32(val);
                 break;
+            case "uint16":
+                b.pushUInt16(val);
+                break;
             case "number":
-            //b.pushInt32(val);
-            //break;
+                //b.pushInt32(val);
+                //break;
             case "double":
                 b.pushDouble(val);
                 break;
@@ -409,7 +546,7 @@ module.exports = {
         return b.toBuffer();
     },
 
-    buildArguments: function (obj, args) {
+    buildArguments: function(obj, args) {
         try {
             var b = new buffers.BufferBuilder();
             for (var i = 0; i < args.length; i++) {
@@ -430,13 +567,12 @@ module.exports = {
             }
             //logger.log('function arguments were ', b.toBuffer().toString('hex'));
             return b.toBuffer();
-        }
-        catch (ex) {
+        } catch (ex) {
             logger.error("buildArguments: ", ex);
         }
         return null;
     },
-    parseArguments: function (args, desc) {
+    parseArguments: function(args, desc) {
         try {
             if (!args || (args.length != desc.length)) {
                 return null;
@@ -459,8 +595,7 @@ module.exports = {
             }
 
             return results;
-        }
-        catch (ex) {
+        } catch (ex) {
             logger.error("parseArguments: ", ex);
         }
 
