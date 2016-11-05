@@ -108,6 +108,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         var that = this;
         this.socket.setNoDelay(true);
         this.socket.setKeepAlive(true, 15 * 1000); //every 15 second(s)
+        socket.setTimeout(60000);
         this.socket.on('error', function(err) {
             console.log("socket error:", err);
             //that.disconnect("socket error " + err);
@@ -117,7 +118,8 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
             err ? that.disconnect("socket close " + err) : "";
         });
         this.socket.on('timeout', function(err) {
-            that.disconnect("socket timeout " + err);
+            console.log("socket time out:", that.getHexCoreID())
+                //that.disconnect("socket timeout " + err);
         });
 
         this.handshake();
