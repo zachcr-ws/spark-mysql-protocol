@@ -125,22 +125,21 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
             var failTimer = setTimeout(function() {
                 console.log("socket time out:", coreID)
                 that.disconnect("socket timeout.");
-            }, 2000);
+            }, 3000);
 
-            that.PingPong(coreID, {
+            that.PingPong("pingpng_" + coreID, {
                 cmd: "Pong"
             }, function(sender, msg) {
-                console.log(sender, msg);
                 clearTimeout(failTimer);
                 if (msg && msg.online) {
                     // Success
                 } else {
-                    console.log("socket time out:", coreID)
+                    console.log("* socket time out:", coreID)
                     that.disconnect("socket timeout.");
                 }
             }, true);
 
-            that.onApiMessage(coreID, {
+            that.onApiMessage("pingpng_" + coreID, {
                 cmd: "Ping"
             })
         });
@@ -560,9 +559,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         return messages.unwrap(data);
     },
 
-    PingPong: function(coreID, filter, callback, once) {
-
-        var EvtName = "pingpng_" + coreID;
+    PingPong: function(EvtName, filter, callback, once) {
 
         var that = this,
             handler = function(sender, msg) {
