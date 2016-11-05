@@ -1,19 +1,19 @@
 /*
- *   Copyright (c) 2015 Particle Industries, Inc.  All rights reserved.
- *
- *   This program is free software; you can redistribute it and/or
- *   modify it under the terms of the GNU Lesser General Public
- *   License as published by the Free Software Foundation, either
- *   version 3 of the License, or (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *   Lesser General Public License for more details.
- *
- *   You should have received a copy of the GNU Lesser General Public
- *   License along with this program; if not, see <http://www.gnu.org/licenses/>.
- */
+*   Copyright (c) 2015 Particle Industries, Inc.  All rights reserved.
+*
+*   This program is free software; you can redistribute it and/or
+*   modify it under the terms of the GNU Lesser General Public
+*   License as published by the Free Software Foundation, either
+*   version 3 of the License, or (at your option) any later version.
+*
+*   This program is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*   Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public
+*   License along with this program; if not, see <http://www.gnu.org/licenses/>.
+*/
 
 
 var when = require("when");
@@ -43,13 +43,7 @@ var Flasher = function(options) {
 };
 
 
-Flasher.stages = {
-    PREPARE: 0,
-    BEGIN_UPDATE: 1,
-    SEND_FILE: 2,
-    TEARDOWN: 3,
-    DONE: 4
-};
+Flasher.stages = { PREPARE: 0, BEGIN_UPDATE: 1, SEND_FILE: 2, TEARDOWN: 3, DONE: 4 };
 //Flasher.prototype = Object.create(IFlasher.prototype, { constructor: { value: IFlasher }});
 Flasher.CHUNK_SIZE = 256;
 Flasher.MAX_CHUNK_SIZE = 594;
@@ -72,7 +66,7 @@ Flasher.prototype = extend(IFlasher.prototype, {
     _ignoreMissedChunks: false,
 
 
-    startFlashFile: function(filename, client, onSuccess, onError) {
+    startFlashFile: function (filename, client, onSuccess, onError) {
         this.filename = filename;
         this.client = client;
         this.onSuccess = onSuccess;
@@ -85,7 +79,7 @@ Flasher.prototype = extend(IFlasher.prototype, {
             this.nextStep();
         }
     },
-    startFlashBuffer: function(buffer, client, onSuccess, onError, onStarted) {
+    startFlashBuffer: function (buffer, client, onSuccess, onError, onStarted) {
         this.fileBuffer = buffer;
         this.client = client;
         this.onSuccess = onSuccess;
@@ -111,14 +105,12 @@ Flasher.prototype = extend(IFlasher.prototype, {
         return true;
     },
 
-    nextStep: function(data) {
+    nextStep: function (data) {
         var that = this;
-        process.nextTick(function() {
-            that._nextStep(data);
-        });
+        process.nextTick(function () { that._nextStep(data); });
     },
 
-    _nextStep: function(data) {
+    _nextStep: function (data) {
         switch (this.stage) {
             case Flasher.stages.PREPARE:
                 this.prepare();
@@ -144,7 +136,7 @@ Flasher.prototype = extend(IFlasher.prototype, {
         }
     },
 
-    failed: function(msg) {
+    failed: function (msg) {
         if (msg) {
             logger.error("Flasher failed " + msg);
         }
@@ -157,7 +149,7 @@ Flasher.prototype = extend(IFlasher.prototype, {
     },
 
 
-    prepare: function() {
+    prepare: function () {
 
 
         //make sure we have a file,
@@ -166,7 +158,8 @@ Flasher.prototype = extend(IFlasher.prototype, {
         if (this.fileBuffer) {
             if (this.fileBuffer.length == 0) {
                 this.failed("Flasher: this.fileBuffer was empty.");
-            } else {
+            }
+            else {
                 if (!Buffer.isBuffer(this.fileBuffer)) {
                     this.fileBuffer = new Buffer(this.fileBuffer);
                 }
@@ -176,11 +169,12 @@ Flasher.prototype = extend(IFlasher.prototype, {
                 this.stage++;
                 this.nextStep();
             }
-        } else {
+        }
+        else {
             var that = this;
             utilities.promiseStreamFile(this.filename)
                 .promise
-                .then(function(readStream) {
+                .then(function (readStream) {
                     that.fileStream = readStream;
                     that._chunkIndex = -1;
                     that.stage++;
@@ -194,7 +188,7 @@ Flasher.prototype = extend(IFlasher.prototype, {
         //start listening for missed chunks before the update fully begins
         this.client.on("msg_chunkmissed", this.onChunkMissed.bind(this));
     },
-    teardown: function() {
+    teardown: function () {
         this.cleanup();
 
         //we succeeded, short-circuit the error function so we don't count more errors than appropriate.
@@ -204,13 +198,11 @@ Flasher.prototype = extend(IFlasher.prototype, {
 
         if (this.onSuccess) {
             var that = this;
-            process.nextTick(function() {
-                that.onSuccess();
-            });
+            process.nextTick(function () { that.onSuccess(); });
         }
     },
 
-    cleanup: function() {
+    cleanup: function () {
         try {
             //resume all other messages to the core
             this.client.releaseOwnership(this);
@@ -236,28 +228,29 @@ Flasher.prototype = extend(IFlasher.prototype, {
             //cleanup when we're done...
             this.clearWatch("UpdateReady");
             this.clearWatch("CompleteTransfer");
-        } catch (ex) {
+        }
+        catch (ex) {
             logger.error("Flasher: error during cleanup " + ex);
         }
     },
 
 
-    begin_update: function() {
+    begin_update: function () {
         var that = this;
         var maxTries = 3;
-        var resendDelay = 6; //NOTE: this is 6 because it's double the ChunkMissed 3 second delay
+        var resendDelay = 6;    //NOTE: this is 6 because it's double the ChunkMissed 3 second delay
 
         //wait for UpdateReady — sent by Core to indicate readiness to receive firmware chunks
-        this.client.listenFor("UpdateReady", null, null, function(msg) {
+        this.client.listenFor("UpdateReady", null, null, function (msg) {
             that.clearWatch("UpdateReady");
 
-            that.client.removeAllListeners("msg_updateabort"); //we got an ok, stop listening for err
+            that.client.removeAllListeners("msg_updateabort");    //we got an ok, stop listening for err
 
             var version = 0;
             if (msg && (msg.getPayloadLength() > 0)) {
                 version = messages.FromBinary(msg.getPayload(), "byte");
             }
-            that._protocolVersion = 1;
+            that._protocolVersion = 1; // Version parsing is not working properly for some reason
 
             that.stage++;
             //that.stage = Flasher.stages.SEND_FILE; //in we ever decide to make this listener re-entrant
@@ -265,9 +258,7 @@ Flasher.prototype = extend(IFlasher.prototype, {
             that.nextStep();
 
             if (that.onStarted) {
-                process.nextTick(function() {
-                    that.onStarted();
-                });
+                process.nextTick(function () { that.onStarted(); });
             }
         }, true);
 
@@ -292,22 +283,22 @@ Flasher.prototype = extend(IFlasher.prototype, {
 
                 //(MDM Proposal) Optional payload to enable fast OTA and file placement:
                 //u8  flags    0x01 - Fast OTA available - when set the server can provide fast OTA transfer
-                //u16 chunk size	Each chunk will be this size apart from the last which may be smaller.
-                //u32 file size		The total size of the file.
-                //u8 destination 	Where to store the file
-                //	0x00 Firmware update
-                //	0x01 External Flash
-                //	0x02 User Memory Function
+                //u16 chunk size    Each chunk will be this size apart from the last which may be smaller.
+                //u32 file size        The total size of the file.
+                //u8 destination     Where to store the file
+                //    0x00 Firmware update
+                //    0x01 External Flash
+                //    0x02 User Memory Function
                 //u32 destination address (0 for firmware update, otherwise the address of external flash or user memory.)
 
-                var flags = 0, //fast ota available
+                var flags = 0,    //fast ota available
                     chunkSize = that.chunk_size,
                     fileSize = that.fileBuffer.length,
-                    destFlag = 0, //TODO: reserved for later
-                    destAddr = 0; //TODO: reserved for later
+                    destFlag = 0,   //TODO: reserved for later
+                    destAddr = 0;   //TODO: reserved for later
 
                 if (that._fastOtaEnabled) {
-                    logger.log("fast ota enabled! ", this.getLogInfo());
+                    logger.log("fast ota enabled! ", that.getLogInfo());
                     flags = 1;
                 }
 
@@ -322,12 +313,14 @@ Flasher.prototype = extend(IFlasher.prototype, {
                 //UpdateBegin — sent by Server to initiate an OTA firmware update
                 sentStatus = that.client.sendMessage("UpdateBegin", null, bb.toBuffer(), null, that.failed, that);
                 maxTries--;
-            } else if (maxTries == 0) {
-                //give us one last LONG wait, for really really slow connections.
-                that.failWatch("UpdateReady", 90, tryBeginUpdate);
+            }
+            else if (maxTries == 0) {
+               //give us one last LONG wait, for really really slow connections.
+               that.failWatch("UpdateReady", 90, tryBeginUpdate);
                 sentStatus = that.client.sendMessage("UpdateBegin", null, null, null, that.failed, that);
-                maxTries--;
-            } else {
+               maxTries--;
+            }
+            else {
                 that.failed("Failed waiting on UpdateReady - out of retries ");
             }
 
@@ -342,7 +335,7 @@ Flasher.prototype = extend(IFlasher.prototype, {
         tryBeginUpdate();
     },
 
-    send_file: function() {
+    send_file: function () {
         this.chunk = null;
         this.lastCrc = null;
 
@@ -356,11 +349,10 @@ Flasher.prototype = extend(IFlasher.prototype, {
         this.failWatch("CompleteTransfer", 600, this.failed.bind(this));
 
         if (this._protocolVersion > 0) {
-            logger.log("flasher - experimental sendAllChunks!! - ", {
-                coreID: this.client.getHexCoreID()
-            });
+            logger.log("flasher - experimental sendAllChunks!! - ", { coreID: this.client.getHexCoreID() });
             this._sendAllChunks();
-        } else {
+        }
+        else {
             this._chunkReceivedHandler = this.onChunkResponse.bind(this);
             this.client.listenFor("ChunkReceived", null, null, this._chunkReceivedHandler, false);
 
@@ -407,19 +399,20 @@ Flasher.prototype = extend(IFlasher.prototype, {
                 return msg;
             };
 
-            //			if (this._gotMissed) {
-            //				console.log("sendChunk %s %s", chunkIndex, this.chunk.toString('hex'));
-            //			}
+            //            if (this._gotMissed) {
+            //                console.log("sendChunk %s %s", chunkIndex, this.chunk.toString('hex'));
+            //            }
 
             this.client.sendMessage("Chunk", {
                 crc: encodedCrc,
                 _writeCoapUri: writeCoapUri
             }, this.chunk, null, null, this);
-        } else {
+        }
+        else {
             this.onAllChunksDone();
         }
     },
-    onChunkResponse: function(msg) {
+    onChunkResponse: function (msg) {
         if (this._protocolVersion > 0) {
             // skip normal handling of this during fast ota.
             return;
@@ -432,7 +425,8 @@ Flasher.prototype = extend(IFlasher.prototype, {
 
         if (!this.chunk) {
             this.onAllChunksDone();
-        } else {
+        }
+        else {
             this.sendChunk();
         }
     },
@@ -469,10 +463,11 @@ Flasher.prototype = extend(IFlasher.prototype, {
 
             //fast ota, lets stick around until 10 seconds after the last chunkmissed message
             this._waitForMissedChunks();
-        } else {
+        }
+        else {
             this.clearWatch("CompleteTransfer");
-            this.stage = Flasher.stages.TEARDOWN;
-            this.nextStep();
+        this.stage = Flasher.stages.TEARDOWN;
+        this.nextStep();
         }
     },
 
@@ -506,7 +501,7 @@ Flasher.prototype = extend(IFlasher.prototype, {
         }
         this._chunkReceivedHandler = null;
 
-        //		logger.log("HERE - _waitForMissedChunks done waiting! ", this.getLogInfo());
+        //        logger.log("HERE - _waitForMissedChunks done waiting! ", this.getLogInfo());
 
         this.clearWatch("CompleteTransfer");
 
@@ -517,14 +512,10 @@ Flasher.prototype = extend(IFlasher.prototype, {
 
     getLogInfo: function() {
         if (this.client) {
-            return {
-                coreID: this.client.getHexCoreID(),
-                cache_key: this.client._connection_key
-            };
-        } else {
-            return {
-                coreID: "unknown"
-            };
+            return { coreID: this.client.getHexCoreID(), cache_key: this.client._connection_key };
+        }
+        else {
+            return { coreID: "unknown" };
         }
     },
 
@@ -558,11 +549,12 @@ Flasher.prototype = extend(IFlasher.prototype, {
         //the payload should include one or more chunk indexes
         var payload = msg.getPayload();
         var r = new buffers.BufferReader(payload);
-        for (var i = 0; i < payload.length; i += 2) {
+        for(var i = 0; i < payload.length; i += 2) {
             try {
                 var idx = r.shiftUInt16();
                 this._resendChunk(idx);
-            } catch (ex) {
+            }
+            catch (ex) {
                 logger.error("onChunkMissed error reading payload " + ex);
             }
         }
@@ -586,9 +578,9 @@ Flasher.prototype = extend(IFlasher.prototype, {
         this._chunkIndex = idx;
 
         //          if (this._protocolVersion > 0) {
-        //				//THIS ASSUMES THIS HAPPENS once the transfer has fully finished.
-        //				//if it happens mid stream, it'll move the filestream, and might disrupt the transfer.
-        //			}
+        //                //THIS ASSUMES THIS HAPPENS once the transfer has fully finished.
+        //                //if it happens mid stream, it'll move the filestream, and might disrupt the transfer.
+        //            }
 
         //re-send
         this.readNextChunk();
@@ -602,15 +594,16 @@ Flasher.prototype = extend(IFlasher.prototype, {
      * @param seconds
      * @param callback
      */
-    failWatch: function(name, seconds, callback) {
+    failWatch: function (name, seconds, callback) {
         if (!this._timers) {
             this._timers = {};
         }
         if (!seconds) {
             clearTimeout(this._timers[name]);
             delete this._timers[name];
-        } else {
-            this._timers[name] = setTimeout(function() {
+        }
+        else {
+            this._timers[name] = setTimeout(function () {
                 //logger.error("Flasher failWatch failed waiting on " + name);
                 if (callback) {
                     callback("failed waiting on " + name);
@@ -619,7 +612,7 @@ Flasher.prototype = extend(IFlasher.prototype, {
         }
     },
     _timers: null,
-    clearWatch: function(name) {
+    clearWatch: function (name) {
         this.failWatch(name, 0, null);
     },
 
