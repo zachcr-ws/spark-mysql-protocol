@@ -39,7 +39,7 @@ var crc32 = require('buffer-crc32');
 //
 
 var Flasher = function(options) {
-    this.chunk_size = Flasher.CHUNK_SIZE;
+	this.chunk_size = Flasher.CHUNK_SIZE;
 };
 
 
@@ -52,18 +52,18 @@ Flasher.MAX_MISSED_CHUNKS = 10;
 Flasher.prototype = extend(IFlasher.prototype, {
     client: null,
     stage: 0,
-    _protocolVersion: 0,
-    _numChunksMissed: 0,
-    _waitForChunksTimer: null,
+	_protocolVersion: 0,
+	_numChunksMissed: 0,
+	_waitForChunksTimer: null,
 
     lastCrc: null,
     chunk: null,
 
-    //
-    // OTA tweaks
-    //
-    _fastOtaEnabled: true,
-    _ignoreMissedChunks: false,
+	//
+	// OTA tweaks
+	//
+	_fastOtaEnabled: false,
+	_ignoreMissedChunks: false,
 
 
     startFlashFile: function (filename, client, onSuccess, onError) {
@@ -92,9 +92,9 @@ Flasher.prototype = extend(IFlasher.prototype, {
         }
     },
 
-    setChunkSize: function(size) {
-        this.chunk_size = size || Flasher.CHUNK_SIZE;
-    },
+	setChunkSize: function(size) {
+		this.chunk_size = size || Flasher.CHUNK_SIZE;
+	},
 
     claimConnection: function() {
         //suspend all other messages to the core
@@ -165,7 +165,7 @@ Flasher.prototype = extend(IFlasher.prototype, {
                 }
 
                 this.fileStream = new BufferStream(this.fileBuffer);
-                this._chunkIndex = -1;
+				this._chunkIndex = -1;
                 this.stage++;
                 this.nextStep();
             }
@@ -176,7 +176,7 @@ Flasher.prototype = extend(IFlasher.prototype, {
                 .promise
                 .then(function (readStream) {
                     that.fileStream = readStream;
-                    that._chunkIndex = -1;
+					that._chunkIndex = -1;
                     that.stage++;
                     that.nextStep();
                 }, that.failed);
@@ -244,13 +244,13 @@ Flasher.prototype = extend(IFlasher.prototype, {
         this.client.listenFor("UpdateReady", null, null, function (msg) {
             that.clearWatch("UpdateReady");
 
-            that.client.removeAllListeners("msg_updateabort");    //we got an ok, stop listening for err
+			that.client.removeAllListeners("msg_updateabort");	//we got an ok, stop listening for err
 
-            var version = 0;
-            if (msg && (msg.getPayloadLength() > 0)) {
-                version = messages.FromBinary(msg.getPayload(), "byte");
-            }
-            that._protocolVersion = 1; // Version parsing is not working properly for some reason
+			var version = 0;
+			if (msg && (msg.getPayloadLength() > 0)) {
+				version = messages.FromBinary(msg.getPayload(), "byte");
+			}
+			that._protocolVersion = version;
 
             that.stage++;
             //that.stage = Flasher.stages.SEND_FILE; //in we ever decide to make this listener re-entrant
@@ -262,73 +262,73 @@ Flasher.prototype = extend(IFlasher.prototype, {
             }
         }, true);
 
-        this.client.listenFor("UpdateAbort", null, null, function(msg) {
-            //client didn't like what we had to say.
+		this.client.listenFor("UpdateAbort", null, null, function(msg) {
+			//client didn't like what we had to say.
 
-            that.clearWatch("UpdateReady");
-            var failReason = '';
-            if (msg && (msg.getPayloadLength() > 0)) {
-                failReason = messages.FromBinary(msg.getPayload(), "byte");
-            }
+			that.clearWatch("UpdateReady");
+			var failReason = '';
+			if (msg && (msg.getPayloadLength() > 0)) {
+				failReason = messages.FromBinary(msg.getPayload(), "byte");
+			}
 
-            that.failed("aborted " + failReason);
-        }, true);
+			that.failed("aborted " + failReason);
+		}, true);
 
 
         var tryBeginUpdate = function() {
-            var sentStatus = true;
+			var sentStatus = true;
 
             if (maxTries > 0) {
                 that.failWatch("UpdateReady", resendDelay, tryBeginUpdate);
 
-                //(MDM Proposal) Optional payload to enable fast OTA and file placement:
-                //u8  flags    0x01 - Fast OTA available - when set the server can provide fast OTA transfer
-                //u16 chunk size    Each chunk will be this size apart from the last which may be smaller.
-                //u32 file size        The total size of the file.
-                //u8 destination     Where to store the file
-                //    0x00 Firmware update
-                //    0x01 External Flash
-                //    0x02 User Memory Function
-                //u32 destination address (0 for firmware update, otherwise the address of external flash or user memory.)
+				//(MDM Proposal) Optional payload to enable fast OTA and file placement:
+				//u8  flags    0x01 - Fast OTA available - when set the server can provide fast OTA transfer
+				//u16 chunk size	Each chunk will be this size apart from the last which may be smaller.
+				//u32 file size		The total size of the file.
+				//u8 destination 	Where to store the file
+				//	0x00 Firmware update
+				//	0x01 External Flash
+				//	0x02 User Memory Function
+				//u32 destination address (0 for firmware update, otherwise the address of external flash or user memory.)
 
-                var flags = 0,    //fast ota available
-                    chunkSize = that.chunk_size,
-                    fileSize = that.fileBuffer.length,
-                    destFlag = 0,   //TODO: reserved for later
-                    destAddr = 0;   //TODO: reserved for later
+				var flags = 0,	//fast ota available
+					chunkSize = that.chunk_size,
+					fileSize = that.fileBuffer.length,
+					destFlag = 0,   //TODO: reserved for later
+					destAddr = 0;   //TODO: reserved for later
 
-                if (that._fastOtaEnabled) {
-                    logger.log("fast ota enabled! ", that.getLogInfo());
-                    flags = 1;
-                }
+				if (this._fastOtaEnabled) {
+					logger.log("fast ota enabled! ", this.getLogInfo());
+					flags = 1;
+				}
 
-                var bb = new buffers.BufferBuilder();
-                bb.pushUInt8(flags);
-                bb.pushUInt16(chunkSize);
-                bb.pushUInt32(fileSize);
-                bb.pushUInt8(destFlag);
-                bb.pushUInt32(destAddr);
+				var bb = new buffers.BufferBuilder();
+				bb.pushUInt8(flags);
+				bb.pushUInt16(chunkSize);
+				bb.pushUInt32(fileSize);
+				bb.pushUInt8(destFlag);
+				bb.pushUInt32(destAddr);
 
 
-                //UpdateBegin — sent by Server to initiate an OTA firmware update
-                sentStatus = that.client.sendMessage("UpdateBegin", null, bb.toBuffer(), null, that.failed, that);
+				//UpdateBegin — sent by Server to initiate an OTA firmware update
+				sentStatus = that.client.sendMessage("UpdateBegin", null, bb.toBuffer(), null, that.failed, that);
                 maxTries--;
             }
             else if (maxTries == 0) {
                //give us one last LONG wait, for really really slow connections.
                that.failWatch("UpdateReady", 90, tryBeginUpdate);
-                sentStatus = that.client.sendMessage("UpdateBegin", null, null, null, that.failed, that);
+				sentStatus = that.client.sendMessage("UpdateBegin", null, null, null, that.failed, that);
                maxTries--;
             }
             else {
                 that.failed("Failed waiting on UpdateReady - out of retries ");
             }
 
-            // did we fail to send out the UpdateBegin message?
-            if (sentStatus === false) {
-                that.clearWatch("UpdateReady");
-                that.failed("UpdateBegin failed - sendMessage failed");
-            }
+			// did we fail to send out the UpdateBegin message?
+			if (sentStatus === false) {
+				that.clearWatch("UpdateReady");
+				that.failed("UpdateBegin failed - sendMessage failed");
+			}
         };
 
 
@@ -346,13 +346,13 @@ Flasher.prototype = extend(IFlasher.prototype, {
         //send when ready:
         //UpdateDone — sent by Server to indicate all firmware chunks have been sent
 
-        this.failWatch("CompleteTransfer", 600, this.failed.bind(this));
+		this.failWatch("CompleteTransfer", 600, this.failed.bind(this));
 
-        if (this._protocolVersion > 0) {
-            logger.log("flasher - experimental sendAllChunks!! - ", { coreID: this.client.getHexCoreID() });
-            this._sendAllChunks();
-        }
-        else {
+		if (this._protocolVersion > 0) {
+			logger.log("flasher - experimental sendAllChunks!! - ", { coreID: this.client.getHexCoreID() });
+			this._sendAllChunks();
+		}
+		else {
             this._chunkReceivedHandler = this.onChunkResponse.bind(this);
             this.client.listenFor("ChunkReceived", null, null, this._chunkReceivedHandler, false);
 
@@ -361,62 +361,62 @@ Flasher.prototype = extend(IFlasher.prototype, {
             //get it started.
             this.readNextChunk();
             this.sendChunk();
-        }
+		}
     },
 
-    readNextChunk: function() {
-        if (!this.fileStream) {
-            logger.error("Asked to read a chunk after the update was finished");
-        }
+	readNextChunk: function() {
+		if (!this.fileStream) {
+			logger.error("Asked to read a chunk after the update was finished");
+		}
 
-        this.chunk = (this.fileStream) ? this.fileStream.read(this.chunk_size) : null;
-        //workaround for https://github.com/spark/core-firmware/issues/238
-        if (this.chunk && (this.chunk.length != this.chunk_size)) {
-            var buf = new Buffer(this.chunk_size);
-            this.chunk.copy(buf, 0, 0, this.chunk.length);
-            buf.fill(0, this.chunk.length, this.chunk_size);
-            this.chunk = buf;
-        }
-        this._chunkIndex++;
-        //end workaround
-        this.lastCrc = (this.chunk) ? crc32.unsigned(this.chunk) : null;
-    },
+		this.chunk = (this.fileStream) ? this.fileStream.read(this.chunk_size) : null;
+		//workaround for https://github.com/spark/core-firmware/issues/238
+		if (this.chunk && (this.chunk.length != this.chunk_size)) {
+			var buf = new Buffer(this.chunk_size);
+			this.chunk.copy(buf, 0, 0, this.chunk.length);
+			buf.fill(0, this.chunk.length, this.chunk_size);
+			this.chunk = buf;
+		}
+		this._chunkIndex++;
+		//end workaround
+		this.lastCrc = (this.chunk) ? crc32.unsigned(this.chunk) : null;
+	},
 
-    sendChunk: function(chunkIndex) {
-        var includeIndex = (this._protocolVersion > 0);
+	sendChunk: function(chunkIndex) {
+		var includeIndex = (this._protocolVersion > 0);
 
-        if (this.chunk) {
-            var encodedCrc = messages.ToBinary(this.lastCrc, 'crc');
-            //            logger.log('sendChunk %s, crc hex is %s ', chunkIndex, encodedCrc.toString('hex'), this.getLogInfo());
+		if (this.chunk) {
+			var encodedCrc = messages.ToBinary(this.lastCrc, 'crc');
+			//            logger.log('sendChunk %s, crc hex is %s ', chunkIndex, encodedCrc.toString('hex'), this.getLogInfo());
 
-            var writeCoapUri = function(msg) {
-                msg.addOption(new Option(Message.Option.URI_PATH, new Buffer("c")));
-                msg.addOption(new Option(Message.Option.URI_QUERY, encodedCrc));
-                if (includeIndex) {
-                    var idxBin = messages.ToBinary(chunkIndex, "uint16");
-                    msg.addOption(new Option(Message.Option.URI_QUERY, idxBin));
-                }
-                return msg;
-            };
+			var writeCoapUri = function(msg) {
+				msg.addOption(new Option(Message.Option.URI_PATH, new Buffer("c")));
+				msg.addOption(new Option(Message.Option.URI_QUERY, encodedCrc));
+				if (includeIndex) {
+					var idxBin = messages.ToBinary(chunkIndex, "uint16");
+					msg.addOption(new Option(Message.Option.URI_QUERY, idxBin));
+				}
+				return msg;
+			};
 
-            //            if (this._gotMissed) {
-            //                console.log("sendChunk %s %s", chunkIndex, this.chunk.toString('hex'));
-            //            }
+			//			if (this._gotMissed) {
+			//				console.log("sendChunk %s %s", chunkIndex, this.chunk.toString('hex'));
+			//			}
 
-            this.client.sendMessage("Chunk", {
-                crc: encodedCrc,
-                _writeCoapUri: writeCoapUri
-            }, this.chunk, null, null, this);
-        }
-        else {
-            this.onAllChunksDone();
-        }
-    },
+			this.client.sendMessage("Chunk", {
+				crc: encodedCrc,
+				_writeCoapUri: writeCoapUri
+			}, this.chunk, null, null, this);
+		}
+		else {
+			this.onAllChunksDone();
+		}
+	},
     onChunkResponse: function (msg) {
-        if (this._protocolVersion > 0) {
-            // skip normal handling of this during fast ota.
-            return;
-        }
+		if (this._protocolVersion > 0) {
+			// skip normal handling of this during fast ota.
+			return;
+		}
 
         //did the core say the CRCs matched?
         if (messages.statusIsOkay(msg)) {
@@ -431,19 +431,19 @@ Flasher.prototype = extend(IFlasher.prototype, {
         }
     },
 
-    _sendAllChunks: function() {
-        this.readNextChunk();
-        while (this.chunk) {
-            this.sendChunk(this._chunkIndex);
-            this.readNextChunk();
-        }
-        //this is fast ota, lets let them re-request every single chunk at least once,
-        //then they'll get an extra ten misses.
-        this._numChunksMissed = -1 * this._chunkIndex;
+	_sendAllChunks: function() {
+		this.readNextChunk();
+		while (this.chunk) {
+			this.sendChunk(this._chunkIndex);
+			this.readNextChunk();
+		}
+		//this is fast ota, lets let them re-request every single chunk at least once,
+		//then they'll get an extra ten misses.
+		this._numChunksMissed = -1 * this._chunkIndex;
 
-        //TODO: wait like 5-6 seconds, and 5-6 seconds after the last chunkmissed?
-        this.onAllChunksDone();
-    },
+		//TODO: wait like 5-6 seconds, and 5-6 seconds after the last chunkmissed?
+		this.onAllChunksDone();
+	},
 
     onAllChunksDone: function() {
         logger.log('on response, no chunk, transfer done!');
@@ -457,135 +457,135 @@ Flasher.prototype = extend(IFlasher.prototype, {
             logger.log("Flasher - failed sending updateDone message");
         }
 
-        if (this._protocolVersion > 0) {
-            this._chunkReceivedHandler = this._waitForMissedChunks.bind(this, true);
-            this.client.listenFor("ChunkReceived", null, null, this._chunkReceivedHandler, false);
+		if (this._protocolVersion > 0) {
+			this._chunkReceivedHandler = this._waitForMissedChunks.bind(this, true);
+			this.client.listenFor("ChunkReceived", null, null, this._chunkReceivedHandler, false);
 
-            //fast ota, lets stick around until 10 seconds after the last chunkmissed message
-            this._waitForMissedChunks();
-        }
-        else {
-            this.clearWatch("CompleteTransfer");
+			//fast ota, lets stick around until 10 seconds after the last chunkmissed message
+			this._waitForMissedChunks();
+		}
+		else {
+			this.clearWatch("CompleteTransfer");
         this.stage = Flasher.stages.TEARDOWN;
         this.nextStep();
-        }
+		}
     },
 
 
-    /**
-     * delay the teardown until at least like 10 seconds after the last chunkmissed message.
-     * @private
-     */
-    _waitForMissedChunks: function(wasAck) {
-        if (this._protocolVersion <= 0) {
-            //this doesn't apply to normal slow ota
-            return;
-        }
+	/**
+	 * delay the teardown until at least like 10 seconds after the last chunkmissed message.
+	 * @private
+	 */
+	_waitForMissedChunks: function(wasAck) {
+		if (this._protocolVersion <= 0) {
+			//this doesn't apply to normal slow ota
+			return;
+		}
 
-        //logger.log("HERE - _waitForMissedChunks wasAck?", wasAck);
+		//logger.log("HERE - _waitForMissedChunks wasAck?", wasAck);
 
-        if (this._waitForChunksTimer) {
-            clearTimeout(this._waitForChunksTimer);
-        }
+		if (this._waitForChunksTimer) {
+			clearTimeout(this._waitForChunksTimer);
+		}
 
-        this._waitForChunksTimer = setTimeout(this._waitForMissedChunksDone.bind(this), 60 * 1000);
-    },
+		this._waitForChunksTimer = setTimeout(this._waitForMissedChunksDone.bind(this), 60 * 1000);
+	},
 
-    /**
-     * fast ota - done sticking around for missing chunks
-     * @private
-     */
-    _waitForMissedChunksDone: function() {
-        if (this._chunkReceivedHandler) {
-            this.client.removeListener("ChunkReceived", this._chunkReceivedHandler);
-        }
-        this._chunkReceivedHandler = null;
+	/**
+	 * fast ota - done sticking around for missing chunks
+	 * @private
+	 */
+	_waitForMissedChunksDone: function() {
+		if (this._chunkReceivedHandler) {
+			this.client.removeListener("ChunkReceived", this._chunkReceivedHandler);
+		}
+		this._chunkReceivedHandler = null;
 
-        //        logger.log("HERE - _waitForMissedChunks done waiting! ", this.getLogInfo());
+		//		logger.log("HERE - _waitForMissedChunks done waiting! ", this.getLogInfo());
 
-        this.clearWatch("CompleteTransfer");
+		this.clearWatch("CompleteTransfer");
 
-        this.stage = Flasher.stages.TEARDOWN;
-        this.nextStep();
-    },
+		this.stage = Flasher.stages.TEARDOWN;
+		this.nextStep();
+	},
 
 
-    getLogInfo: function() {
-        if (this.client) {
-            return { coreID: this.client.getHexCoreID(), cache_key: this.client._connection_key };
-        }
-        else {
-            return { coreID: "unknown" };
-        }
-    },
+	getLogInfo: function() {
+		if (this.client) {
+			return { coreID: this.client.getHexCoreID(), cache_key: this.client._connection_key };
+		}
+		else {
+			return { coreID: "unknown" };
+		}
+	},
 
     onChunkMissed: function(msg) {
-        this._waitForMissedChunks();
-        //console.log("got chunk missed");
-        //this._gotMissed = true;
+		this._waitForMissedChunks();
+		//console.log("got chunk missed");
+		//this._gotMissed = true;
 
-        this._numChunksMissed++;
-        if (this._numChunksMissed > Flasher.MAX_MISSED_CHUNKS) {
+		this._numChunksMissed++;
+		if (this._numChunksMissed > Flasher.MAX_MISSED_CHUNKS) {
 
-            logger.error('flasher - chunk missed - core over limit, killing! ', this.getLogInfo());
-            this.failed();
-            return;
-        }
+			logger.error('flasher - chunk missed - core over limit, killing! ', this.getLogInfo());
+			this.failed();
+			return;
+		}
 
-        // if we're not doing a fast OTA, and ignore missed is turned on, then ignore this missed chunk.
-        if (!this._fastOtaEnabled && this._ignoreMissedChunks) {
-            logger.log("ignoring missed chunk ", this.getLogInfo());
-            return;
-        }
+		// if we're not doing a fast OTA, and ignore missed is turned on, then ignore this missed chunk.
+		if (!this._fastOtaEnabled && this._ignoreMissedChunks) {
+			logger.log("ignoring missed chunk ", this.getLogInfo());
+			return;
+		}
 
-        logger.log('flasher - chunk missed - recovering ', this.getLogInfo());
+		logger.log('flasher - chunk missed - recovering ', this.getLogInfo());
 
-        //kosher if I ack before I've read the payload?
-        this.client.sendReply("ChunkMissedAck", msg.getId(), null, null, null, this);
+		//kosher if I ack before I've read the payload?
+		this.client.sendReply("ChunkMissedAck", msg.getId(), null, null, null, this);
 
-        //old method
-        //var idx = messages.FromBinary(msg.getPayload(), "uint16");
+		//old method
+		//var idx = messages.FromBinary(msg.getPayload(), "uint16");
 
-        //the payload should include one or more chunk indexes
-        var payload = msg.getPayload();
-        var r = new buffers.BufferReader(payload);
-        for(var i = 0; i < payload.length; i += 2) {
-            try {
-                var idx = r.shiftUInt16();
-                this._resendChunk(idx);
-            }
-            catch (ex) {
-                logger.error("onChunkMissed error reading payload " + ex);
-            }
-        }
-    },
+		//the payload should include one or more chunk indexes
+		var payload = msg.getPayload();
+		var r = new buffers.BufferReader(payload);
+		for(var i = 0; i < payload.length; i += 2) {
+			try {
+				var idx = r.shiftUInt16();
+				this._resendChunk(idx);
+			}
+			catch (ex) {
+				logger.error("onChunkMissed error reading payload " + ex);
+			}
+		}
+	},
 
-    _resendChunk: function(idx) {
-        if (typeof idx == "undefined") {
-            logger.error("flasher - Got ChunkMissed, index was undefined");
-            return;
-        }
+	_resendChunk: function(idx) {
+		if (typeof idx == "undefined") {
+			logger.error("flasher - Got ChunkMissed, index was undefined");
+			return;
+		}
 
-        if (!this.fileStream) {
-            return this.failed("ChunkMissed, fileStream was empty");
-        }
+		if (!this.fileStream) {
+			return this.failed("ChunkMissed, fileStream was empty");
+		}
 
-        logger.log("flasher resending chunk " + idx);
+		logger.log("flasher resending chunk " + idx);
 
-        //seek
-        var offset = idx * this.chunk_size;
-        this.fileStream.seek(offset);
-        this._chunkIndex = idx;
+		//seek
+		var offset = idx * this.chunk_size;
+		this.fileStream.seek(offset);
+		this._chunkIndex = idx;
 
-        //          if (this._protocolVersion > 0) {
-        //                //THIS ASSUMES THIS HAPPENS once the transfer has fully finished.
-        //                //if it happens mid stream, it'll move the filestream, and might disrupt the transfer.
-        //            }
+		//          if (this._protocolVersion > 0) {
+		//				//THIS ASSUMES THIS HAPPENS once the transfer has fully finished.
+		//				//if it happens mid stream, it'll move the filestream, and might disrupt the transfer.
+		//			}
 
-        //re-send
-        this.readNextChunk();
-        this.sendChunk(idx);
-    },
+		//re-send
+		this.readNextChunk();
+		this.sendChunk(idx);
+	},
 
 
     /**
