@@ -101,6 +101,11 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
      */
     _describeDfd: null,
 
+    _socket_err_tmp: null,
+    _socket_err_filter: {
+        "ECONNRESET": 1
+    },
+
     /**
      * configure our socket and start the handshake
      */
@@ -110,12 +115,18 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         this.socket.setKeepAlive(true, 15 * 1000); //every 15 second(s)
         // this.socket.setTimeout(10000);
         this.socket.on('error', function(err) {
-            console.log("socket error:", err);
+            //console.log("socket error:", err);
+            that._socket_err_tmp = err;
             //that.disconnect("socket error " + err);
         });
         this.socket.on('close', function(err) {
-            console.log("socket close:", err);
-            err ? that.disconnect("socket close " + err) : "";
+            console.log("socket close:", err, that._socket_err_tmp);
+            if (err) {
+                if (that._socket_err_tmp["code"] && !that._socket_err_filter[that._socket_err_tmp["code"]]) {
+                    that.disconnect("socket close " + err);
+                    that._socket_err_tmp = null;
+                }
+            }
         });
 
         // Timeout Checking
