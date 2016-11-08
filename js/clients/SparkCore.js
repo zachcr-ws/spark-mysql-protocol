@@ -139,21 +139,13 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                 that.disconnect("socket timeout.");
             }, 3000);
 
-            that.PingPong("pingpng_" + coreID, {
-                cmd: "Pong"
-            }, function(sender, msg) {
+            that.getVariable("stats", undefined, function(value, buf, err) {
                 clearTimeout(failTimer);
-                if (msg && msg.online) {
-                    // Success
-                } else {
+                if (!err) {
                     console.log("* socket time out:", coreID)
                     that.disconnect("socket timeout.");
                 }
-            }, true);
-
-            that.onApiMessage("pingpng_" + coreID, {
-                cmd: "Ping"
-            })
+            });
         });
 
         this.handshake();
@@ -569,34 +561,6 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
     parseMessage: function(data) {
         //we're assuming data is a serialized CoAP message
         return messages.unwrap(data);
-    },
-
-    PingPong: function(EvtName, filter, callback, once) {
-
-        var that = this,
-            handler = function(sender, msg) {
-                //logger.log('heard from ' + ((sender) ? sender.toString() : '(UNKNOWN)'));
-
-                if (!utilities.leftHasRightFilter(msg, filter)) {
-                    //logger.log('filters did not match');
-                    return;
-                }
-
-                if (once) {
-                    that.removeListener(EvtName, handler);
-                }
-
-                process.nextTick(function() {
-                    try {
-                        //logger.log('passing message to callback ', msg);
-                        callback(sender, msg);
-                    } catch (ex) {
-                        logger.error("listenFor error: " + ex, (ex) ? ex.stack : '');
-                    }
-                });
-            };
-
-        this.on(EvtName, handler);
     },
 
     /**
