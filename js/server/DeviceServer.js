@@ -209,9 +209,6 @@ DeviceServer.prototype = {
                         core._connection_key = key;
 
                         //TODO: expose to API
-
-
-                        _cores[key] = core;
                         core.on('ready', function() {
                             var coreid = this.getHexCoreID();
                             logger.log("Core " + coreid + " online!");
@@ -245,8 +242,6 @@ DeviceServer.prototype = {
                         core.on('disconnect', function(msg) {
                             var coreid = this.getHexCoreID();
                             logger.log("Core offline:" + coreid);
-                            //logger.log("Session ended for " + core._connection_key);
-                            delete _cores[key];
                             delete memo._allCoresByID[coreid];
 
                             if (global.publisher) {
@@ -267,7 +262,6 @@ DeviceServer.prototype = {
                 });
             });
 
-        global.cores = _cores;
         global.publisher = new EventPublisher();
 
         server.on('error', function() {
