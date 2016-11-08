@@ -112,8 +112,8 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
     startupProtocol: function() {
         var that = this;
         this.socket.setNoDelay(true);
-        this.socket.setKeepAlive(true, 10 * 1000); //every 10 second(s)
-        this.socket.setTimeout(20000);
+        this.socket.setKeepAlive(true, 15 * 1000); //every 10 second(s)
+        this.socket.setTimeout(30000);
         this.socket.on('error', function(err) {
             //console.log("socket error:", err);
             that._socket_err_tmp = err;
