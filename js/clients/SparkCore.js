@@ -112,13 +112,14 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
     startupProtocol: function() {
         var that = this;
         this.socket.setNoDelay(true);
-        this.socket.setKeepAlive(true, 15 * 1000); //every 15 second(s)
-        // this.socket.setTimeout(10000);
+        this.socket.setKeepAlive(true, 10 * 1000); //every 10 second(s)
+        this.socket.setTimeout(20000);
         this.socket.on('error', function(err) {
             //console.log("socket error:", err);
             that._socket_err_tmp = err;
             //that.disconnect("socket error " + err);
         });
+
         this.socket.on('close', function(err) {
             console.log("socket close:", err, that._socket_err_tmp);
             if (err) {
@@ -131,28 +132,8 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
 
         // Timeout Checking
         this.socket.on('timeout', function() {
-
-            // var coreID = that.getHexCoreID();
-            // var failTimer = setTimeout(function() {
-            //     console.log("socket time out:", coreID)
-            //     that.disconnect("socket timeout.");
-            // }, 3000);
-            //
-            // that.PingPong("pingpng_" + coreID, {
-            //     cmd: "Pong"
-            // }, function(sender, msg) {
-            //     clearTimeout(failTimer);
-            //     if (msg && msg.online) {
-            //         // Success
-            //     } else {
-            //         console.log("* socket time out:", coreID)
-            //         that.disconnect("socket timeout.");
-            //     }
-            // }, true);
-            //
-            // that.onApiMessage("pingpng_" + coreID, {
-            //     cmd: "Ping"
-            // })
+            console.log("socket time out:", that.getHexCoreID())
+            that.disconnect("socket timeout.");
         });
 
         this.handshake();
