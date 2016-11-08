@@ -213,11 +213,6 @@ DeviceServer.prototype = {
                             var coreid = this.getHexCoreID();
                             logger.log("Core " + coreid + " online!");
                             memo._allCoresByID[coreid] = core;
-                            if (memo._allCoresByIDCount[coreid] && memo._allCoresByIDCount[coreid] >= 1) {
-                                memo._allCoresByIDCount[coreid]++;
-                            } else {
-                                memo._allCoresByIDCount[coreid] = 1;
-                            }
                             memo._attribsByID[coreid] = memo._attribsByID[coreid] || {
                                 coreID: coreid,
                                 name: null,
@@ -247,13 +242,7 @@ DeviceServer.prototype = {
                         core.on('disconnect', function(msg) {
                             var coreid = this.getHexCoreID();
                             logger.log("Core offline:" + coreid);
-
-                            if (memo._allCoresByIDCount[coreid] && memo._allCoresByIDCount[coreid] > 1) {
-                                memo._allCoresByIDCount[coreid]--;
-                            } else {
-                                delete memo._allCoresByID[coreid];
-                                delete memo._allCoresByIDCount[coreid];
-                            }
+                            delete memo._allCoresByID[coreid];
 
                             if (global.publisher) {
                                 global.publisher.publish(

@@ -4,7 +4,6 @@
 
 var Memory = {
     _allCoresByID: null,
-    _allCoresByIDCount: null,
     _attribsByID: null,
     _allIDs: null,
 
