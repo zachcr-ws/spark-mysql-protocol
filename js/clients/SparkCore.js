@@ -102,9 +102,13 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
     _describeDfd: null,
 
     _socket_err_tmp: null,
-    _socket_err_filter: {
-        "ECONNRESET": 1
-    },
+    _socket_err_filter: {},
+
+    /**
+     * Health Checking
+     */
+    _health_interval: null,
+    _unhealth_count: 0,
 
     /**
      * configure our socket and start the handshake
@@ -113,42 +117,45 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
         var that = this;
         this.socket.setNoDelay(true);
         this.socket.setKeepAlive(true, 15 * 1000); //every 15 second(s)
-        // this.socket.setTimeout(15000);
+
         this.socket.on('error', function(err) {
-            //console.log("socket error:", err);
             that._socket_err_tmp = err;
-            //that.disconnect("socket error " + err);
         });
 
         this.socket.on('close', function(err) {
-            console.log("socket close:", err, that._socket_err_tmp);
             if (err) {
-                if (that._socket_err_tmp["code"] && !that._socket_err_filter[that._socket_err_tmp["code"]]) {
-                    that.disconnect("socket close " + err);
-                    that._socket_err_tmp = null;
-                }
+                //if (that._socket_err_tmp["code"] && !that._socket_err_filter[that._socket_err_tmp["code"]]) {}
+                that.disconnect("socket close " + err);
+                that._socket_err_tmp = null;
             }
         });
 
-        // Timeout Checking
-        this.socket.on('timeout', function() {
-            console.log("Timeout: ", that.getHexCoreID());
-            // var coreID = that.getHexCoreID();
-            // var failTimer = setTimeout(function() {
-            //     console.log("socket time out:", coreID)
-            //     that.disconnect("socket timeout.");
-            // }, 3000);
-            //
-            // that.getVariable("stats", undefined, function(value, buf, err) {
-            //     clearTimeout(failTimer);
-            //     if (err) {
-            //         console.log("* socket time out:", coreID, err, value)
-            //         that.disconnect("socket timeout.");
-            //     }
-            // });
-        });
-
+        // Health Checking
+        this.healthcheck();
+        // Handshake
         this.handshake();
+    },
+
+    healthcheck: function() {
+        var that = this;
+        this._health_interval = setInterval(function() {
+            var failTimer = setTimeout(function() {
+                that._unhealth_count++;
+                if (that._unhealth_count > 3) {
+                    that.disconnect("socket timeout.");
+                }
+            }, 3000);
+
+            that.getVariable("stats", undefined, function(value, buf, err) {
+                clearTimeout(failTimer);
+                if (err) {
+                    that._unhealth_count++;
+                    if (that._unhealth_count > 3) {
+                        that.disconnect("socket timeout.");
+                    }
+                }
+            });
+        }, 10000);
     },
 
     handshake: function() {
@@ -1471,7 +1478,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
             }
         }
 
-        //        clearTimeout(this._idleTimer);
+        this._health_interval ? clearInterval(this._health_interval) : "";
 
         this.emit('disconnect', msg);
 

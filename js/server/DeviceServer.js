@@ -242,18 +242,20 @@ DeviceServer.prototype = {
                         core.on('disconnect', function(msg) {
                             var coreid = this.getHexCoreID();
                             logger.log("Core offline:" + coreid);
-                            delete memo._allCoresByID[coreid];
+                            if (memo._allCoresByID[coreid] == core) {
+                                delete memo._allCoresByID[coreid];
 
-                            if (global.publisher) {
-                                global.publisher.publish(
-                                    true,
-                                    "spark/status",
-                                    undefined,
-                                    "offline",
-                                    60,
-                                    moment().toISOString(),
-                                    coreid
-                                );
+                                if (global.publisher) {
+                                    global.publisher.publish(
+                                        true,
+                                        "spark/status",
+                                        undefined,
+                                        "offline",
+                                        60,
+                                        moment().toISOString(),
+                                        coreid
+                                    );
+                                }
                             }
                         });
                     } catch (ex) {
