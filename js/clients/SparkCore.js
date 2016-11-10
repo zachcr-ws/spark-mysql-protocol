@@ -153,6 +153,8 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                     if (that._unhealth_count > 3) {
                         that.disconnect("socket timeout.");
                     }
+                } else {
+                    that._unhealth_count = 0;
                 }
             });
         }, 10000);
