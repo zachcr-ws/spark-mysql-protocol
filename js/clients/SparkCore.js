@@ -144,7 +144,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                 if (that._unhealth_count > 3) {
                     that.disconnect("socket timeout.");
                 }
-            }, 3000);
+            }, 5000);
 
             that.getVariable("stats", undefined, function(value, buf, err) {
                 clearTimeout(failTimer);
@@ -157,7 +157,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                     that._unhealth_count = 0;
                 }
             });
-        }, 10000);
+        }, 60000);
     },
 
     handshake: function() {
