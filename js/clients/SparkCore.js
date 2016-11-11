@@ -1448,7 +1448,7 @@ SparkCore.prototype = extend(ISparkCore.prototype, EventEmitter.prototype, {
                 logInfo['duration'] = delta;
             }
 
-            logger.log(this._disconnectCtr + ": Core disconnected: " + msg, logInfo);
+            //logger.log(this._disconnectCtr + ": Core disconnected: " + msg, logInfo);
         } catch (ex) {
             logger.error("Disconnect log error " + ex);
         }
