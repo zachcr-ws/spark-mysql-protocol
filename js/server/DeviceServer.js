@@ -23,6 +23,7 @@ var utilities = require('../lib/utilities.js');
 var logger = require('../lib/logger.js');
 var model = require("../lib/Model.js");
 var memo = require("../lib/Memory.js");
+var rc = require("../lib/Redis.js");
 var crypto = require('crypto');
 var ursa = require('ursa');
 var when = require('when');
@@ -189,6 +190,7 @@ DeviceServer.prototype = {
 
     start: function() {
         global.settings = settings;
+        global.redis = rc(settings.REDIS_DOMAIN, settings.REDIS_PORT);
 
         //
         //  Create our basic socket handler
@@ -228,6 +230,7 @@ DeviceServer.prototype = {
                             }
 
                             if (global.publisher) {
+                                global.redis.hset(settings.REDIS_STATUS_KEY, coreid, "online");
                                 global.publisher.publish(
                                     true,
                                     "spark/status",
@@ -247,6 +250,7 @@ DeviceServer.prototype = {
                                 delete memo._allCoresByID[coreid];
 
                                 if (global.publisher) {
+                                    global.redis.hset(settings.REDIS_STATUS_KEY, coreid, "offline");
                                     global.publisher.publish(
                                         true,
                                         "spark/status",
