@@ -1,8 +1,11 @@
 var redis = require("redis");
 
-var RedisDriver = function(domain, port) {
+var RedisClient = undefined;
+
+var RedisDriver = function(domain, port, key) {
     this.domain = domain;
     this.port = port;
+    this.key = key;
 }
 
 RedisDriver.prototype = {
@@ -11,8 +14,9 @@ RedisDriver.prototype = {
         return redis.createClient(this.port, this.domain);
     },
 
-    hset: function(key, tp, value) {
-        var client = this.client();
+    hset: function(tp, value) {
+        var client = this.client(),
+            key = this.key;
         client.on("connect", function() {
             client.hset(key, tp, value, function(err) {
                 if (err) {
@@ -23,8 +27,9 @@ RedisDriver.prototype = {
     }
 }
 
-module.exports = function(domain, port) {
-    return new RedisDriver(
-        domain, port
-    )
+module.exports.InitRedisClient = function(domain, port, key) {
+    if (RedisClient == undefined) {
+        RedisClient = new RedisDriver(domain, port, key);
+    }
+    return RedisClient;
 };

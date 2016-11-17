@@ -23,6 +23,24 @@ MysqlClient.InitMysqlClient(
 * database
 * poolCap: connection pool's limit
 
+
+### Init Redis
+
+> For save device online/offline status.
+
+```
+var RedisClient = require("spark-mysql-protocol/lib/Redis.js");
+RedisClient.InitRedisClient(
+    settings.redis.domain,
+    settings.redis.port,
+    settings.redis.key
+);
+```
+
+* domain: redis server domain
+* port: redis server port
+* key: storage key
+
 #### Use
 
 all functions return a promise.

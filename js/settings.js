@@ -22,10 +22,6 @@ module.exports = {
     PORT: 5683,
     HOST: "localhost",
 
-    REDIS_PORT: 6379,
-    REDIS_DOMAIN: "192.168.1.12",
-    REDIS_STATUS_KEY: "_aeris.device.status",
-
     /**
      * Your server crypto keys!
      */
