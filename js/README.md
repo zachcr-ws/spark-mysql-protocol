@@ -66,3 +66,7 @@ client.slave_query(query_string, values).then(...);    // slave node read action
 ### Claim Code
 
 Send by soft-AP protocal, and saved in core_key.
+
+### Warning
+
+Nodejs version need 0.10.41 is great.
