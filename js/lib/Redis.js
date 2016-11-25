@@ -22,6 +22,8 @@ RedisDriver.prototype = {
                 if (err) {
                     console.error("[Redis Set Erorr]: ", err);
                 }
+
+                client.end();
             })
         });
     }
