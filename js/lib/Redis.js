@@ -23,7 +23,7 @@ RedisDriver.prototype = {
                     console.error("[Redis Set Erorr]: ", err);
                 }
 
-                client.end();
+                client.quit();
             })
         });
     }
