@@ -66,7 +66,9 @@ DeviceServer.prototype = {
             var that = this;
 
             model.saveCore(attribs).then(function(result) {
-                that.loadCore(coreid);
+                setTimeout(function() {
+                    that.loadCore(coreid);
+                }, 2000);
                 defer.resolve();
             }, function(err) {
                 if (err.code && err.code == "ER_DUP_ENTRY") {
